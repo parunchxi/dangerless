@@ -51,6 +51,7 @@ export function MapCanvas({ hideMobileControls = false }: MapCanvasProps) {
         >
           <LayerSelector />
           <MapControls
+            map={map}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
             onResetNorth={handleResetNorth}
