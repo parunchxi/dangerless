@@ -67,12 +67,17 @@ export class GeocodingService {
   private filterResults(results: NominatimResult[]): NominatimResult[] {
     return results.filter((result) => {
       if (!result.address) return false;
-      
-      // Prefer results with geojson data and without quarter subdivision
-      if (result.geojson && !result.address.quarter) {
+
+        // Prefer results with geojson data and without quarter subdivision
+      if (
+        result.geojson &&
+        result.geojson.coordinates.length == 1 &&
+        !result.address.quarter
+      ) {
         return true;
       }
-      
+
+
       return false;
     });
   }
