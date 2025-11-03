@@ -2,7 +2,6 @@ import React from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared";
-import LinkPreview from "@/components/shared/LinkPreview"
 
 const REPORT_FIELDS = [
   { id: "report-title", label: "Title", placeholder: "Brief description" , required: true},
