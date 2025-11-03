@@ -2,6 +2,7 @@ import React from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared";
+import LinkPreview from "@/components/shared/LinkPreview"
 
 const REPORT_FIELDS = [
   { id: "report-title", label: "Title", placeholder: "Brief description" },
@@ -9,6 +10,17 @@ const REPORT_FIELDS = [
     id: "report-location",
     label: "Location",
     placeholder: "Where is this happening?",
+  },
+  {
+    id: "report-date",
+    label: "Date",
+    placeholder: "When did this happen?",
+    type: "date" as const,
+  },
+  {
+    id: "report-source",
+    label: "Source",
+    placeholder: "Where did you find this information?",
   },
   {
     id: "report-description",
@@ -34,7 +46,6 @@ export function AddNewsMode() {
       {REPORT_FIELDS.map((field) => (
         <FormField key={field.id} {...field} />
       ))}
-
       <Button
         type="submit"
         className="w-full rounded-xl h-10 bg-primary hover:bg-primary/90 transition-all shadow-md"

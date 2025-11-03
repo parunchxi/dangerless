@@ -2,12 +2,13 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import LinkPreview from "./LinkPreview";
 
 interface FormFieldProps {
   id: string;
   label: string;
   placeholder: string;
-  type?: "text" | "textarea";
+  type?: "text" | "textarea" | "date";
   rows?: number;
   className?: string;
 }
@@ -22,6 +23,7 @@ export function FormField({
 }: FormFieldProps) {
   const baseInputClass =
     "rounded-xl border-border/20 bg-background/50 focus:bg-background/75 transition-colors";
+  const [url, setUrl] = React.useState("");
 
   return (
     <div className={cn("space-y-1.5", className)}>
@@ -39,12 +41,23 @@ export function FormField({
           )}
         />
       ) : (
-        <Input
-          id={id}
-          type={type}
-          placeholder={placeholder}
-          className={cn("h-10", baseInputClass)}
-        />
+        <>
+          <Input
+            id={id}
+            type={type}
+            placeholder={placeholder}
+            className={cn(
+              "h-10 ",
+              baseInputClass,
+              type === "date" ? "w-fit" : ""
+            )}
+            value={id === "report-source" ? url : undefined}
+            onChange={
+              id === "report-source" ? (e) => setUrl(e.target.value) : undefined
+            }
+          />
+          {id === "report-source" && url && <LinkPreview url={url} />}
+        </>
       )}
     </div>
   );

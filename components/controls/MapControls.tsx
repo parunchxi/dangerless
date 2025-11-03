@@ -39,7 +39,7 @@ export function MapControls({
     if (!query) {
       map.easeTo({ zoom: 3, duration: 2000 });
     } else {
-      map.easeTo({ zoom: 12, duration: 2000 });
+      map.easeTo({ zoom: 13, duration: 2000 });
     }
   }, []);
 
