@@ -3,12 +3,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import LinkPreview from "./LinkPreview";
+import { Button } from "../ui/button";
+import Image from "next/image";
 
 interface FormFieldProps {
   id: string;
   label: string;
   placeholder: string;
-  type?: "text" | "textarea" | "date";
+  type?: "text" | "textarea" | "date" | "location";
   rows?: number;
   className?: string;
   required?: boolean;
@@ -32,7 +34,19 @@ export function FormField({
       <Label htmlFor={id} className="text-xs font-medium text-foreground/80">
         {label} {required && <span className="text-red-500">*</span>}
       </Label>
-      {type === "textarea" ? (
+      {type === "location" && (
+        <div className="flex flex-col gap-2">
+          <Button variant="outline" type="button" className="w-full">
+            Select Location From Map
+            <img
+              src="/assets/logo/dangerless.svg"
+              alt="Dangerless"
+              className=" h-full dark:invert px-2"
+            />
+          </Button>
+        </div>
+      )}
+      {type === "textarea" && (
         <textarea
           id={id}
           placeholder={placeholder}
@@ -43,8 +57,9 @@ export function FormField({
             baseInputClass
           )}
         />
-      ) : (
-        <>
+      )}
+      {(type === "text" || type === "date") && (
+        <div className="flex flex-col gap-5">
           <Input
             required={required}
             id={id}
@@ -62,7 +77,7 @@ export function FormField({
             }
           />
           {id === "report-source" && url && <LinkPreview url={url} />}
-        </>
+        </div>
       )}
     </div>
   );

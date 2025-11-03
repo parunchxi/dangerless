@@ -4,32 +4,38 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared";
 
 const REPORT_FIELDS = [
-  { id: "report-title", label: "Title", placeholder: "Brief description" , required: true},
+  {
+    id: "report-title",
+    label: "Title",
+    placeholder: "Brief description",
+    required: true,
+  },
   {
     id: "report-location",
     label: "Location",
     placeholder: "Where is this happening?",
-    required: true
+    type: "location" as const,
+    required: true,
   },
   {
     id: "report-date",
     label: "Date",
     placeholder: "When did this happen?",
     type: "date" as const,
-    required: true
+    required: true,
   },
   {
     id: "report-source",
     label: "Source",
     placeholder: "Where did you find this information?",
-    required: true
+    required: true,
   },
   {
     id: "report-description",
     label: "Description",
     placeholder: "Provide details...",
     type: "textarea" as const,
-    required: false
+    required: false,
   },
 ] as const;
 

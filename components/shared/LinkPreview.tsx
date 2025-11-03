@@ -52,7 +52,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   if (!preview) return null;
 
   return (
-    <div className="border rounded p-4 max-w-lg w-full shadow-md flex flex-col gap-2">
+    <div className="border rounded-xl p-4 max-w-lg w-full shadow-md flex flex-col gap-2">
       {preview.image && (
         <img
           src={preview.image}
