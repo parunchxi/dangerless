@@ -4,7 +4,10 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import LinkPreview from "./LinkPreview";
 import { Button } from "../ui/button";
-import Image from "next/image";
+import { useMapMode } from "@/lib/contexts";
+import { useNavigationState, useMapSelection } from "@/lib/hooks";
+import { useLocationSelection } from "@/lib/contexts/LocationSelectionContext";
+import { MAP_MODES } from "@/lib/constants";
 
 interface FormFieldProps {
   id: string;
@@ -28,6 +31,15 @@ export function FormField({
   const baseInputClass =
     "rounded-xl border-border/20 bg-background/50 focus:bg-background/75 transition-colors";
   const [url, setUrl] = React.useState("");
+  const { mode, setMode } = useMapMode();
+  const { closeTray } = useNavigationState();
+  const { selectedLocation, coordinates } = useLocationSelection();
+  const isSelectingLocation = mode === MAP_MODES.SELECT_LOCATION;
+
+  const handleLocationSelect = () => {
+    closeTray(); // Close any open tray
+    setMode(MAP_MODES.SELECT_LOCATION); // Set map to location selection mode
+  };
 
   return (
     <div className={cn("space-y-1.5", className)}>
@@ -36,14 +48,31 @@ export function FormField({
       </Label>
       {type === "location" && (
         <div className="flex flex-col gap-2">
-          <Button variant="outline" type="button" className="w-full">
-            Select Location From Map
-            <img
-              src="/assets/logo/dangerless.svg"
-              alt="Dangerless"
-              className=" h-full dark:invert px-2"
-            />
+          <Button
+            variant="outline"
+            type="button"
+            className="w-full"
+            onClick={handleLocationSelect}
+            disabled={isSelectingLocation}
+          >
+            {isSelectingLocation
+              ? "Waiting for location selection..."
+              : "Select Location From Map"}
+            {!selectedLocation && !isSelectingLocation && (
+              <img
+                src="/assets/logo/dangerless.svg"
+                alt="Dangerless"
+                className="h-full dark:invert px-2"
+              />
+            )}
           </Button>
+          {coordinates && (
+            <div className="text-xs text-muted-foreground">
+              Latitude: {coordinates.lat.toFixed(6)}, Longitude:{" "}
+              {coordinates.lng.toFixed(6)} <br />
+              Name: {selectedLocation}
+            </div>
+          )}
         </div>
       )}
       {type === "textarea" && (

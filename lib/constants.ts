@@ -4,6 +4,7 @@ export const MAP_MODES = {
   NEWS: "news",
   HISTORY: "history",
   ADD_NEWS: "addnew",
+  SELECT_LOCATION: "select-location",
 } as const;
 
 export const DETAIL_BAR_CONFIG = {
