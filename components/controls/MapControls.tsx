@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Minus, Compass, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Z_INDEX } from "@/lib/constants/navigation";
+import { useMapData } from "@/lib/contexts";
 
 interface MapControlsProps {
+  map?: maplibregl.Map | null;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onResetNorth?: () => void;
@@ -16,6 +18,7 @@ interface MapControlsProps {
 }
 
 export function MapControls({
+  map,
   onZoomIn,
   onZoomOut,
   onResetNorth,
@@ -28,6 +31,17 @@ export function MapControls({
 
   const geolocateRef = React.useRef<HTMLButtonElement>(null);
   const compassRef = React.useRef<HTMLButtonElement>(null);
+
+  const { query } = useMapData();
+
+  useEffect(() => {
+    if (!map) return;
+    if (!query) {
+      map.easeTo({ zoom: 3, duration: 2000 });
+    } else {
+      map.easeTo({ zoom: 13, duration: 2000 });
+    }
+  }, []);
 
   const getTooltipPosition = (
     buttonRef: React.RefObject<HTMLButtonElement | null>
