@@ -25,6 +25,18 @@ const REPORT_FIELDS = [
     required: true,
   },
   {
+    id: "report-category",
+    label: "Category",
+    placeholder: "-- Select a category --",
+    type: "select" as const,
+    options: [
+      { value: "Violence"},
+      { value: "Climate Hazard"},
+      { value: "Accident"},
+    ] as { value: string }[],
+    required: true,
+  },
+  {
     id: "report-source",
     label: "Source",
     placeholder: "Where did you find this information?",

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import LinkPreview from "./LinkPreview";
 import { Button } from "../ui/button";
 import { useMapMode } from "@/lib/contexts";
-import { useNavigationState, useMapSelection } from "@/lib/hooks";
+import { useNavigationState } from "@/lib/hooks";
 import { useLocationSelection } from "@/lib/contexts/LocationSelectionContext";
 import { MAP_MODES } from "@/lib/constants";
 
@@ -13,7 +13,8 @@ interface FormFieldProps {
   id: string;
   label: string;
   placeholder: string;
-  type?: "text" | "textarea" | "date" | "location";
+  type?: "text" | "textarea" | "date" | "location" | "select";
+  options?: { value: string }[];
   rows?: number;
   className?: string;
   required?: boolean;
@@ -24,6 +25,7 @@ export function FormField({
   label,
   placeholder,
   type = "text",
+  options,
   rows = 3,
   className,
   required = false,
@@ -46,6 +48,26 @@ export function FormField({
       <Label htmlFor={id} className="text-xs font-medium text-foreground/80">
         {label} {required && <span className="text-red-500">*</span>}
       </Label>
+      {type === "select" && options && (
+        <select
+          id={id}
+          name={id}
+          className={cn(
+            "w-full appearance-none px-3 py-2 focus:border-border/40 focus:outline-none focus:ring-1 focus:ring-ring/20 text-sm ",
+            baseInputClass
+          )}
+          required={required}
+        >
+          <option value="" disabled selected>
+            {placeholder}
+          </option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.value}
+            </option>
+          ))}
+        </select>
+      )}
       {type === "location" && (
         <div className="flex flex-col gap-2">
           <Button
