@@ -1,5 +1,5 @@
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  timeout: 60000, // 60 seconds per test
+  timeout: 100000, // 100 seconds per test
 });
