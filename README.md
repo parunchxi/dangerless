@@ -59,19 +59,76 @@ npm run type-check   # TypeScript type checking
 
 ```
 app/
-├── page.tsx         # Landing page
-├── dashboard/       # Main application
-├── protected/       # User area
-└── auth/           # Authentication
+├── page.tsx              # Main map application
+├── layout.tsx            # Root layout with theme provider
+├── globals.css           # Global styles
+├── auth/                 # Authentication routes
+│   ├── confirm/          # Email confirmation
+│   └── error/            # Auth error handling
+└── api/
+    └── map/              # Map API routes
 
 components/
-├── auth-button.tsx # Authentication
-├── hero.tsx        # Landing hero
-└── ui/             # UI components
+├── navigation/           # Navigation bar components
+│   ├── NavigationBar.tsx
+│   ├── NavItem.tsx
+│   ├── NavLogo.tsx
+│   ├── NavThemeSwitcher.tsx
+│   └── NavUserSection.tsx
+├── modes/                # Map mode components
+│   ├── NewsMode.tsx
+│   └── AddNewsMode.tsx
+├── trays/                # Sidebar tray components
+│   ├── NewsTray.tsx
+│   └── ReportTray.tsx
+├── controls/             # Map controls
+│   ├── MapControls.tsx
+│   └── LayerSelector.tsx
+├── search/               # Search functionality
+│   ├── MapSearchBar.tsx
+│   └── ui/               # Search UI components
+├── mobile/               # Mobile-specific components
+│   ├── CollapsibleSection.tsx
+│   ├── DragHandle.tsx
+│   ├── ThemeSwitcher.tsx
+│   └── UserSection.tsx
+├── shared/               # Shared UI components
+│   ├── EmptyState.tsx
+│   ├── FormField.tsx
+│   └── TrayComponents.tsx
+├── ui/                   # shadcn/ui components
+├── MapCanvas.tsx         # Main map component
+├── MobileBottomSheet.tsx # Mobile UI container
+└── SidebarTray.tsx       # Desktop sidebar container
 
 lib/
-├── supabase/       # Database client
-└── utils.ts        # Utilities
+├── contexts/             # React contexts
+│   ├── MapDataContext.tsx
+│   ├── MapLayerContext.tsx
+│   ├── MapModeContext.tsx
+│   └── MapViewContext.tsx
+├── hooks/                # Custom React hooks
+│   ├── useAuth.ts
+│   ├── useMapControls.ts
+│   ├── useMapInstance.ts
+│   ├── useMapMarkers.ts
+│   ├── useMapSearch.ts
+│   ├── useMapSelection.ts
+│   ├── useNavigationState.ts
+│   └── useUserLocation.ts
+├── services/             # External services
+│   └── geocoding.ts
+├── supabase/             # Supabase client
+│   ├── client.ts
+│   ├── server.ts
+│   └── middleware.ts
+├── constants/            # App constants
+│   └── navigation.ts
+└── utils.ts              # Utility functions
+
+types/
+├── map.ts                # Map-related types
+└── navigation.ts         # Navigation types
 ```
 
 ## Contributing

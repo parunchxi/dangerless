@@ -4,7 +4,7 @@
   "description": "An application for providing travelers with real-time neighborhood safety ratings and local safety news alerts.",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -23,12 +23,13 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
+    "link-preview-js": "^3.1.0",
     "lucide-react": "^0.511.0",
     "maplibre-gl": "^5.9.0",
     "next": "latest",
     "next-themes": "^0.4.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
@@ -36,11 +37,11 @@
     "@playwright/test": "^1.56.1",
     "@types/maplibre-gl": "^1.13.2",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
-    "eslint-config-next": "15.3.1",
+    "eslint-config-next": "16.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
@@ -61,5 +62,9 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "overrides": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2"
   }
 }

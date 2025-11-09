@@ -47,11 +47,13 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
+  // Define public routes that don't require authentication
+  const publicRoutes = ["/", "/map", "/auth"];
+  const isPublicRoute = publicRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+
+  if (!user && !isPublicRoute) {
     // no user, redirect to home page where they can authenticate with Google OAuth
     const url = request.nextUrl.clone();
     url.pathname = "/";
