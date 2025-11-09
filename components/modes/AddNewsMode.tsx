@@ -2,6 +2,8 @@ import React from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared";
+import { useLocationSelection } from "@/lib/contexts/LocationSelectionContext";
+import { useMapSelection } from "@/lib/hooks";
 
 const REPORT_FIELDS = [
   {
@@ -52,12 +54,21 @@ const REPORT_FIELDS = [
 ] as const;
 
 export function AddNewsMode() {
+  const { coordinates } = useLocationSelection();
+  const { results, selectedIndex } = useMapSelection();
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (!coordinates || selectedIndex === null) {
+      alert("Please select a valid location for the report.");
+      return;
+    }
     // Form submission implementation pending
     console.log("Form submitted");
     // You can access form data here
     const formData = new FormData(e.currentTarget);
     console.log("Form data:", Object.fromEntries(formData.entries()));
+    console.log("Coordinates:", coordinates);
+    console.log("Selected location:", results?.[selectedIndex]);
   };
 
   return (
