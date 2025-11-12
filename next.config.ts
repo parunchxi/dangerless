@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname, // Ensures the current folder is used as the root
+  },
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
