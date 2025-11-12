@@ -35,10 +35,15 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
         if (res.ok) {
           setPreview(data);
         } else {
-          setError("Unable to fetch preview");
+          // show server-provided error if available
+          const msg = (data && (data.error || data.message)) || "Unable to fetch preview";
+          console.error("Link preview API error:", msg);
+          setError(msg);
         }
-      } catch {
-        setError("Unable to fetch preview");
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error("Link preview fetch failed:", msg);
+        setError(msg || "Unable to fetch preview");
       } finally {
         setLoading(false);
       }
