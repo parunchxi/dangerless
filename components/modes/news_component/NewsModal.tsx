@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
+import ReactDOM from "react-dom";
+import type { NewsItem } from "./NewsCard";
 
 export function NewsModal({ open, onClose, item }: { open: boolean; onClose: () => void; item: NewsItem | null }) {
   useEffect(() => {
@@ -11,9 +13,9 @@ export function NewsModal({ open, onClose, item }: { open: boolean; onClose: () 
 
   if (!open || !item) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+  const modal = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div className="relative w-[min(900px,90%)] bg-white rounded-lg shadow-lg p-6">
         {/* image optionnelle si présente */}
         <div className="h-44 bg-gray-100 rounded-md mb-4 flex items-center justify-center overflow-hidden">
@@ -47,4 +49,6 @@ export function NewsModal({ open, onClose, item }: { open: boolean; onClose: () 
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modal, document.body);
 }
