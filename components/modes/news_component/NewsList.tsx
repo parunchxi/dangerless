@@ -14,7 +14,8 @@ interface NewsListProps {
   fromDate?: string;
   toDate?: string;
   onDateRangeChange?: (from?: string, to?: string) => void;
-  onItemClick?: (item: NewsItem) => void;
+  // Pass preview image as second arg so modal can reuse already loaded image
+  onItemClick?: (item: NewsItem, previewImage?: string) => void;
 }
 
 export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onItemClick }: NewsListProps) {
@@ -68,9 +69,23 @@ export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onI
         {(!items || items.length === 0) ? (
           <EmptyState icon={Newspaper} message="No news updates at the moment" />
         ) : (
-          items.map((item) => (
-            <NewsCard key={item.id} item={item} onClick={() => onItemClick?.(item)} />
-          ))
+          items.map((item) => {
+            const preview =
+              (item as any).previewImage ??
+              (item as any).image ??
+              (item as any).image_url ??
+              (item as any).thumbnail ??
+              item.source ??
+              "/images/news-fallback.png";
+
+            return (
+              <NewsCard
+                key={item.id}
+                item={item}
+                onClick={() => onItemClick?.(item, preview)}
+              />
+            );
+          })
         )}
       </div>
     </div>
