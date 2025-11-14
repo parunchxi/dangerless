@@ -33,9 +33,10 @@ export interface NewsItem {
 
 interface NewsCardProps {
   item: NewsItem;
+  onClick?: () => void;
 }
 
-export function NewsCard({ item }: NewsCardProps) {
+export function NewsCard({ item, onClick }: NewsCardProps) {
   // show only the date (no time)
   const dateOnly = item.date ? new Date(item.date).toLocaleDateString() : "";
   const { focusOnLocation } = useMapView();
@@ -88,33 +89,48 @@ export function NewsCard({ item }: NewsCardProps) {
   const [showPopup, setShowPopup] = useState(false);
 
   return (
-    <Card className="relative pt-2">
-      {/* Location button (top-right) */}
+    <article className="news-card cursor-pointer" onClick={onClick} role="button" tabIndex={0}>
+      {/* pin button: don't open modal */}
       {item.location && (
-        <div className="absolute top-4 right-4 z-10">
-          <button
-            className="p-1 rounded-md hover:bg-muted"
-            title="Show on map"
-            onClick={() => {
-              try {
-                const loc = item.location!;
-                // build a minimal Nominatim-like result
-                const result = {
-                  display_name: item.title || item.description || "Selected location",
-                  lat: String(loc.lat),
-                  lon: String((loc as any).lon || ""),
-                } as any;
-                focusOnLocation(result);
-              } catch (e) {
-                // ignore
-              }
-            }}
-          >
-            <MapPin className="w-6 h-6" />
-            <span className="sr-only">Show location on map</span>
-          </button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();          // <-- important
+            try {
+              const loc = item.location!;
+              // build a minimal Nominatim-like result
+              const result = {
+                display_name: item.title || item.description || "Selected location",
+                lat: String(loc.lat),
+                lon: String((loc as any).lon || ""),
+              } as any;
+              focusOnLocation(result);
+            } catch (e) {
+              // ignore
+            }
+          }}
+          aria-label="Show on map"
+          className="map-pin-btn"
+        >
+          <MapPin className="w-6 h-6" />
+          <span className="sr-only">Show location on map</span>
+        </button>
       )}
+
+      {/* source link:  don't open modal */}
+      {item.source && (
+        <a
+          href={item.source}
+          onClick={(e) => {
+            e.stopPropagation();          
+          }}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Source
+        </a>
+      )}
+
+      {/* reste du contenu de la card */}
       {/* Status badge inside the card (top-left) */}
       {item.severity && (
         <div className="absolute top-2 left-4 z-10">
@@ -176,7 +192,7 @@ export function NewsCard({ item }: NewsCardProps) {
           ) : null}
         </div>
       </CardFooter>
-    </Card>
+    </article>
   );
 }
 

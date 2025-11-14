@@ -14,9 +14,10 @@ interface NewsListProps {
   fromDate?: string;
   toDate?: string;
   onDateRangeChange?: (from?: string, to?: string) => void;
+  onItemClick?: (item: NewsItem) => void;
 }
 
-export function NewsList({ items, area, fromDate, toDate, onDateRangeChange }: NewsListProps) {
+export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onItemClick }: NewsListProps) {
 
   const areaRef = useRef<HTMLDivElement | null>(null);
   const [areaHeight, setAreaHeight] = useState<number>(0);
@@ -68,7 +69,7 @@ export function NewsList({ items, area, fromDate, toDate, onDateRangeChange }: N
           <EmptyState icon={Newspaper} message="No news updates at the moment" />
         ) : (
           items.map((item) => (
-            <NewsCard key={item.id} item={item} />
+            <NewsCard key={item.id} item={item} onClick={() => onItemClick?.(item)} />
           ))
         )}
       </div>
