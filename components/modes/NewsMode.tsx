@@ -6,9 +6,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useMarkerNew } from "@/lib/contexts/MarkerNewContext";
 
 export function NewsMode() {
   // Example placeholder items; replace with real data fetching
+  const { setItems } = useMarkerNew();
   const newsItems: NewsItem[] = [
     {
       id: "1",
@@ -68,6 +70,12 @@ export function NewsMode() {
       location_name: "Highway 50, Exit 7",
     }
   ];
+
+  // Set initial items in context
+  // useMemo(() => {
+  //   setItems(newsItems);
+  // }, [setItems]);
+  
 
   const areaInfo: AreaInfo = {
     status: "warning",
