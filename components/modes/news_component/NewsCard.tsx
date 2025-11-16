@@ -33,7 +33,7 @@ export interface NewsItem {
 
 interface NewsCardProps {
   item: NewsItem;
-  onClick?: () => void;
+  onClick?: (previewImage?: string) => void;
 }
 
 export function NewsCard({ item, onClick }: NewsCardProps) {
@@ -89,7 +89,18 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
   const [showPopup, setShowPopup] = useState(false);
 
   return (
-    <article className="news-card cursor-pointer" onClick={onClick} role="button" tabIndex={0}>
+    <article
+      className="news-card cursor-pointer"
+      onClick={() => onClick?.(previewImage || undefined)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.(previewImage || undefined);
+        }
+      }}
+    >
       {/* pin button: don't open modal */}
       {item.location && (
         <button
@@ -116,7 +127,7 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
         </button>
       )}
 
-      {/* source link:  don't open modal */}
+      {/* source link: don't open modal */}
       {item.source && (
         <a
           href={item.source}
@@ -130,7 +141,7 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
         </a>
       )}
 
-      {/* reste du contenu de la card */}
+      {/* rest of card content */}
       {/* Status badge inside the card (top-left) */}
       {item.severity && (
         <div className="absolute top-2 left-4 z-10">
@@ -176,7 +187,10 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
                 onMouseLeave={() => setShowPopup(false)}
                 onFocus={() => setShowPopup(true)}
                 onBlur={() => setShowPopup(false)}
-                onClick={() => setShowPopup((s) => !s)}
+                onClick={(e) => {
+                  e.stopPropagation();           
+                  setShowPopup((s) => !s);
+                }}
               >
                 <ExternalLink className="w-4 h-4" />
                 <span className="sr-only">Open source</span>

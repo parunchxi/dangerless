@@ -4,7 +4,8 @@ import * as React from "react";
 import { useRef, useState, useLayoutEffect } from "react";
 import { Newspaper } from "lucide-react";
 import { EmptyState } from "@/components/shared";
-import NewsCard, { type NewsItem } from "./NewsCard";
+import { NewsCard } from "./NewsCard";
+import { NewsModal } from "./NewsModal";
 import AreaInfoCard, { type AreaInfo } from "./AreaInfoCard";
 
 interface NewsListProps {
@@ -22,6 +23,9 @@ export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onI
 
   const areaRef = useRef<HTMLDivElement | null>(null);
   const [areaHeight, setAreaHeight] = useState<number>(0);
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<NewsItem | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     if (!areaRef.current) return;
@@ -69,25 +73,29 @@ export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onI
         {(!items || items.length === 0) ? (
           <EmptyState icon={Newspaper} message="No news updates at the moment" />
         ) : (
-          items.map((item) => {
-            const preview =
-              (item as any).previewImage ??
-              (item as any).image ??
-              (item as any).image_url ??
-              (item as any).thumbnail ??
-              item.source ??
-              "/images/news-fallback.png";
-
-            return (
-              <NewsCard
-                key={item.id}
-                item={item}
-                onClick={() => onItemClick?.(item, preview)}
-              />
-            );
-          })
+          items.map((item) => (
+            <NewsCard
+              key={item.id}
+              item={item}
+              onClick={(img) => {
+                setSelected(item);
+                setSelectedPreview(img ?? null);
+                setOpen(true);
+              }}
+            />
+          ))
         )}
       </div>
+      <NewsModal
+        open={open}
+        item={selected}
+        previewImage={selectedPreview}
+        onClose={() => {
+          setOpen(false);
+          setSelected(null);
+          setSelectedPreview(null);
+        }}
+      />
     </div>
   );
 }
