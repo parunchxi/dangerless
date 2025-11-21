@@ -67,8 +67,27 @@ export function AddNewsMode() {
     // You can access form data here
     const formData = new FormData(e.currentTarget);
     console.log("Form data:", Object.fromEntries(formData.entries()));
-    console.log("Coordinates:", coordinates);
-    console.log("Selected location:", results?.[selectedIndex]);
+
+    const formNewsStructure = {
+      title: formData.get("report-title"),
+      location: {
+        name: results?.[selectedIndex]?.display_name || "Unknown location",
+        lat: coordinates.lat,
+        lon: coordinates.lng,
+        address_district: results?.[selectedIndex]?.display_name || "Unknown district",
+      },
+      news_source: formData.get("report-source"),
+      news_date: formData.get("report-date"),
+      category: formData.get("report-category"),
+      description: formData.get("report-description"),
+      recommended_action: "To be determined",
+      status: "Private",
+      owner: "userUID", // replace with actual user UID
+    };
+
+    console.log("Structured report data:", formNewsStructure);
+    // console.log("Coordinates:", coordinates);
+    // console.log("Selected location:", results?.[selectedIndex]);
   };
 
   return (
