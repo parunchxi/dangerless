@@ -50,6 +50,18 @@ export function useMapMarkers(
 
     const existingIds = new Set(Object.keys(newMarkerRefs.current));
 
+    // Helper function to create a colored marker
+    function createColoredMarker(color: string) {
+      const el = document.createElement("div");
+      el.style.width = "20px";
+      el.style.height = "20px";
+      el.style.backgroundColor = color;
+      el.style.borderRadius = "30%"; // circle
+      el.style.border = "2px solid white"; // optional outline
+      el.style.boxShadow = "0 0 5px rgba(0,0,0,0.5)"; // optional shadow
+      return el;
+    }
+
     markerNewItems.forEach((item: MarkerNewItem) => {
       if (!item.location) {
         // remove existing marker if present
@@ -72,17 +84,19 @@ export function useMapMarkers(
             : item.severity === "warning"
             ? "#f59e0b"
             : "#06b6d4";
-        const marker = new maplibregl.Marker({ color })
+
+        const el = createColoredMarker(color);
+
+        const marker = new maplibregl.Marker({ element: el })
           .setLngLat([lng, lat])
           .addTo(map);
 
         if (item.title) {
           const popup = new maplibregl.Popup({ offset: 12 }).setHTML(
-            `<strong>${escapeHtml(
-              item.title
-            )}</strong><div style="font-size:12px">${escapeHtml(
-              item.location_name || ""
-            )}</div>`
+            `<strong style="color:black;">${escapeHtml(item.title)}</strong>
+           <div style="font-size:12px;color:black;">${escapeHtml(
+             item.location_name || ""
+           )}</div>`
           );
           marker.setPopup(popup);
         }

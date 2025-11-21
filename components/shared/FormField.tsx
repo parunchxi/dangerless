@@ -61,9 +61,10 @@ export function FormField({
             "w-full appearance-none px-3 py-2 focus:border-border/40 focus:outline-none focus:ring-1 focus:ring-ring/20 text-sm ",
             baseInputClass
           )}
+          defaultValue=""
           required={required}
         >
-          <option value="" disabled selected>
+          <option disabled value="">
             {placeholder || "Select an option"}
           </option>
           {options.map((option) => (
@@ -86,7 +87,7 @@ export function FormField({
               isSelectingLocation ? (
                 <>
                   <LoadingSpinner className="w-4 h-4 mr-1" />
-                    "Waiting for location selection in map ..."
+                  "Waiting for location selection in map ..."
                 </>
               ) : (
                 "Select Location From Map"
@@ -99,7 +100,7 @@ export function FormField({
                   className="inline-block w-4 h-4 opacity-70"
                   aria-hidden="true"
                 />
-                  Please search and select an area first
+                Please search and select an area first
               </>
             )}
           </Button>
