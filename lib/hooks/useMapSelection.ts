@@ -1,15 +1,19 @@
 import { useCallback, useEffect } from "react";
 import maplibregl from "maplibre-gl";
 import { useMapData, useMapView, useMapMode } from "../contexts";
-import type { MapCoordinate } from "@/types/map";
+import type { MapCoordinate, NominatimResult } from "@/types/map";
 import { MAP_MODES, API_CONFIG } from "../constants";
+
 
 import { useLocationSelection } from "../contexts/LocationSelectionContext";
 
 export function useMapSelection() {
   const { results, selectedIndex, setSelectedIndex } = useMapData();
-  const { focusOnLocation } = useMapView();
+  const { focusOnLocation, setSelectedLocation: setMapSelectedLocation } =
+    useMapView();
   const { mode, setMode } = useMapMode();
+
+
 
   const selectLocation = useCallback(
     (index: number) => {
@@ -34,28 +38,31 @@ export function useMapSelection() {
   const reverseGeocode = useCallback(
     async ([lng, lat]: MapCoordinate) => {
       try {
-        // Using our API endpoint for reverse geocoding
         const url = `/api/map?lat=${lat}&lon=${lng}`;
         const response = await fetch(url);
-        // console.log("Reverse geocoding request sent to:", url);
 
         if (!response.ok) {
           throw new Error("Failed to fetch location data");
         }
 
-        const data = await response.json();
-        // console.log("Geocoding response:", data);
-        // console.log("Setting location with:", data.display_name, lat, lng);
+        const data: NominatimResult = await response.json();
+
+        // 1) อัปเดต context เดิมที่ใช้โชว์ใต้ปุ่ม
         setSelectedLocation(data.display_name);
         setCoordinates({ lat, lng });
-        setMode(MAP_MODES.SEARCH); // Reset mode after successful geocoding
+
+        // 2) อัปเดต MapViewContext → AddNewsMode เห็นตำแหน่งนี้
+        setMapSelectedLocation(data);
+
+        // 3) ปิดโหมด select
+        setMode(MAP_MODES.SEARCH);
       } catch (error) {
-        // console.error("Error reverse geocoding:", error);
-        setMode(MAP_MODES.SEARCH); // Reset mode even if there's an error
+        setMode(MAP_MODES.SEARCH);
       }
     },
-    [setSelectedLocation, setCoordinates, setMode]
+    [setSelectedLocation, setCoordinates, setMapSelectedLocation, setMode]
   );
+
 
   const handleLocationClick = useCallback(
     (map: maplibregl.Map, lngLat: maplibregl.LngLat) => {
