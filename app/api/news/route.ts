@@ -1,5 +1,5 @@
 // app/api/news/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
@@ -72,4 +72,38 @@ export async function POST(req: Request) {
     { success: true, message: "Created successfully" },
     { status: 201 }
   );
+}
+
+// GET /api/news?district=Thung%20Khru&status=Published
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+
+  const district = searchParams.get("district"); // optional
+  const status = searchParams.get("status");     // optional: "Private" | "Published" | "Rejected"
+
+  let query = supabase
+    .from("news")
+    .select("*")
+    .order("date", { ascending: false });
+
+  if (district) {
+    query = query.eq("district", district);
+  }
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching news list:", error.message);
+    return NextResponse.json(
+      { error: "Unable to fetch news list." },
+      { status: 500 }
+    );
+  }
+
+  // 200 OK: คืน array ของ news ทั้งหมดตาม filter
+  return NextResponse.json(data, { status: 200 });
 }
