@@ -19,6 +19,21 @@ interface NewsListProps {
   onItemClick?: (item: NewsItem, previewImage?: string) => void;
 }
 
+export interface NewsItem {
+  id: string;
+  title: string;
+  description?: string;
+  // `source` is now the canonical URL for the news item (was previously `url`)
+  source?: string;
+  date?: string; // ISO string (was publishedAt)
+  severity?: "critical" | "warning" | "info" | "normal"; // was status
+  category?: string[]; // was tags
+  // optional geo location for the news item — use `lon` not `lng`
+  location?: { lat: number; lon: number } | null;
+  // optional brief human-friendly location name to display under the date (snake_case)
+  location_name?: string | null;
+}
+
 export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onItemClick }: NewsListProps) {
 
   const areaRef = useRef<HTMLDivElement | null>(null);
