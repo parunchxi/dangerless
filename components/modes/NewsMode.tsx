@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
-export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => void }) {
+export function NewsMode() {
   // Example placeholder items; replace with real data fetching
   const newsItems: NewsItem[] = [
     {
@@ -200,7 +200,6 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
           setFromDate(f);
           setToDate(t);
         }}
-        onItemClick={onItemClick}
       />
     </div>
   );

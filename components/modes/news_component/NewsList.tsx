@@ -4,8 +4,7 @@ import * as React from "react";
 import { useRef, useState, useLayoutEffect } from "react";
 import { Newspaper } from "lucide-react";
 import { EmptyState } from "@/components/shared";
-import { NewsCard } from "./NewsCard";
-import { NewsModal } from "./NewsModal";
+import NewsCard, { type NewsItem } from "./NewsCard";
 import AreaInfoCard, { type AreaInfo } from "./AreaInfoCard";
 
 interface NewsListProps {
@@ -15,17 +14,12 @@ interface NewsListProps {
   fromDate?: string;
   toDate?: string;
   onDateRangeChange?: (from?: string, to?: string) => void;
-  // Pass preview image as second arg so modal can reuse already loaded image
-  onItemClick?: (item: NewsItem, previewImage?: string) => void;
 }
 
-export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onItemClick }: NewsListProps) {
+export function NewsList({ items, area, fromDate, toDate, onDateRangeChange }: NewsListProps) {
 
   const areaRef = useRef<HTMLDivElement | null>(null);
   const [areaHeight, setAreaHeight] = useState<number>(0);
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<NewsItem | null>(null);
-  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     if (!areaRef.current) return;
@@ -74,28 +68,10 @@ export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onI
           <EmptyState icon={Newspaper} message="No news updates at the moment" />
         ) : (
           items.map((item) => (
-            <NewsCard
-              key={item.id}
-              item={item}
-              onClick={(img) => {
-                setSelected(item);
-                setSelectedPreview(img ?? null);
-                setOpen(true);
-              }}
-            />
+            <NewsCard key={item.id} item={item} />
           ))
         )}
       </div>
-      <NewsModal
-        open={open}
-        item={selected}
-        previewImage={selectedPreview}
-        onClose={() => {
-          setOpen(false);
-          setSelected(null);
-          setSelectedPreview(null);
-        }}
-      />
     </div>
   );
 }
