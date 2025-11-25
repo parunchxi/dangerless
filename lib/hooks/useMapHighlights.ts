@@ -2,9 +2,29 @@ import { useEffect } from "react";
 import maplibregl from "maplibre-gl";
 import type { NominatimResult } from "@/types/map";
 
+// Get colors based on risk status (matching AreaInfoCard logic)
+function getBadgeColor(status?: string) {
+  if (!status) return { backgroundColor: "#3b82f6", color: "white" };
+  const s = String(status).toLowerCase().trim();
+  switch (s) {
+    case "critical":
+      return { backgroundColor: "#e11d48", color: "white" };
+    case "high":
+      return { backgroundColor: "#f59e0b", color: "white" };
+    case "moderate":
+    case "medium":
+      return { backgroundColor: "#eab308", color: "black" };
+    case "low":
+      return { backgroundColor: "#22c55e", color: "white" };
+    default:
+      return { backgroundColor: "#3b82f6", color: "white" };
+  }
+}
+
 export function useMapHighlights(
   map: maplibregl.Map | null,
-  selectedLocation: NominatimResult | null
+  selectedLocation: NominatimResult | null,
+  areaStatus?: string
 ) {
   useEffect(() => {
     if (!map) return;
@@ -36,6 +56,24 @@ export function useMapHighlights(
     const addHighlight = (geometry: GeoJSON.Geometry) => {
       if (!map) return;
 
+      // Get color from badge color function
+      const badgeColor = getBadgeColor(areaStatus);
+      const fillColor = badgeColor.backgroundColor;
+
+      // Convert hex color to darker shade for outline
+      const outlineColor =
+        fillColor === "#3b82f6"
+          ? "#2563eb"
+          : fillColor === "#e11d48"
+          ? "#be123c"
+          : fillColor === "#f59e0b"
+          ? "#d97706"
+          : fillColor === "#eab308"
+          ? "#ca8a04"
+          : fillColor === "#22c55e"
+          ? "#16a34a"
+          : "#2563eb";
+
       map.addSource("area-highlight", {
         type: "geojson",
         data: {
@@ -50,7 +88,7 @@ export function useMapHighlights(
         type: "fill",
         source: "area-highlight",
         paint: {
-          "fill-color": "#3b82f6",
+          "fill-color": fillColor,
           "fill-opacity": 0.2,
         },
       });
@@ -60,7 +98,7 @@ export function useMapHighlights(
         type: "line",
         source: "area-highlight",
         paint: {
-          "line-color": "#2563eb",
+          "line-color": outlineColor,
           "line-width": 2,
         },
       });
@@ -105,5 +143,5 @@ export function useMapHighlights(
     }
 
     return cleanupHighlights;
-  }, [map, selectedLocation]);
+  }, [map, selectedLocation, areaStatus]);
 }

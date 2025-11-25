@@ -6,108 +6,262 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { useMarkerNew } from "@/lib/contexts/MarkerNewContext";
+import { useMapSelection } from "@/lib/hooks";
+import { useMarkerNew, useAreaStatus } from "@/lib/contexts";
+import { extractDistrict } from "@/lib/utils/districtValidation";
+import { EditNewsModal } from "./news_component/EditNewsModal";
 
-export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => void }) {
-  // Example placeholder items; replace with real data fetching
-  const { setItems } = useMarkerNew();
-  const newsItems: NewsItem[] = [
-    {
-      id: "1",
-      title: "Community safety patrol launched",
-      description:
-        "Local volunteers have started a nightly safety patrol in the downtown area.",
-      // `source` is the article URL now
-      source: "https://gametora.com/umamusume/characters/101301-mejiro-mcqueen",
-      date: new Date().toISOString(),
-      severity: "critical",
-      category: ["Caution"],
-      location: { lat: 13.7437, lon: 100.5321 },
-      location_name: "Downtown Patrol HQ",
-    },
-    {
-      id: "2",
-      title: "New street lighting installed",
-      description:
-        "Bright LED streetlights is currently being installed on Elm Street to improve visibility.",
-      source: "https://youtu.be/J7FqiKJmwEI?si=shc-tBEp4W3l8gZW",
-      date: new Date().toISOString(),
-      severity: "info",
-      category: ["Caution"],
-      location: { lat: 13.7304, lon: 100.5206 },
-      location_name: "Elm Street",
-    },
-    {
-      id: "3",
-      title: "Islamic Center Renovation Completed",
-      description:
-        "Renovation of the Islamic Center has been under construction, will featuring new facilities and improved accessibility. Please be careful to the surrounding area.",
-      source: "https://youtu.be/-fMkyL1q0eU?si=vrC-94qcXpol8izR",
-      date: new Date().toISOString(),
-      severity: "info",
-      category: ["Caution"],
-      location: { lat: 13.7399, lon: 100.525 },
-      location_name: "Islamic Center",
-    },
-    {
-      id: "4",
-      title: "Tornado Warning Issued",
-      description:
-        "A tornado warning has been issued for the area. Residents are advised to take shelter.",
-      source: "https://youtu.be/aacHWoB7cmY?si=j30AnKaC7SNpQkPF",
-      date: new Date().toISOString(),
-      severity: "warning",
-      category: ["Natural Hazard"],
-      location: { lat: 13.805, lon: 100.56 },
-      location_name: "Northern District",
-    },
-    {
-      id: "5",
-      title: "Car crash on Highway 50",
-      description:
-        "Caution advised due to a multi-vehicle accident on Highway 50 causing delays.",
-      source: "https://youtu.be/pDOkKGbFZSY?si=YQOLb9G6WRYMESs7",
-      date: new Date().toISOString(),
-      severity: "warning",
-      category: ["Accidents"],
-      // mock location (Bangkok example)
-      location: { lat: 13.736717, lon: 100.523186 },
-      location_name: "Highway 50, Exit 7",
-    },
-  ];
+export function NewsMode() {
+  // Get search selection context for district extraction
+  const { results, selectedIndex } = useMapSelection();
+  const { setItems: setMarkerItems } = useMarkerNew();
+  const { setAreaStatus } = useAreaStatus();
 
-  // Set initial items in context
+  // Client-side state for news items comes only from the backend now.
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
+
   useEffect(() => {
-    setItems(newsItems);
-  }, [setItems]); // include newsItems if you want updates
+    let mounted = true;
+    const fetchNews = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Extract district from the selected location
+        if (!results || selectedIndex === null) {
+          return;
+        }
+        let districtParam = "";
+        if (results && selectedIndex !== null) {
+          const displayName = results[selectedIndex]?.display_name;
+          if (displayName) {
+            districtParam = extractDistrict(displayName);
+          }
+        }
 
-  const areaInfo: AreaInfo = {
-    status: "warning",
-    subDistrict: "Old Town",
-    district: "Central",
-    province: "Bangkok",
-    country: "Thailand",
-    historicalEvents: [
-      {
-        title: "Annual Night Market",
-        startDate: new Date(
-          new Date().getTime() - 1000 * 60 * 60 * 24 * 30
-        ).toISOString(),
-        endDate: new Date(
-          new Date().getTime() - 1000 * 60 * 60 * 24 * 29
-        ).toISOString(),
-      },
-      {
-        title: "Street Festival",
-        startDate: new Date(
-          new Date().getTime() - 1000 * 60 * 60 * 24 * 10
-        ).toISOString(),
-        endDate: new Date(
-          new Date().getTime() - 1000 * 60 * 60 * 24 * 9
-        ).toISOString(),
-      },
-    ],
+        // Build the API URL with district parameter if available
+        let apiUrl = "/api/news";
+        if (districtParam) {
+          apiUrl += `?district=${encodeURIComponent(districtParam)}`;
+        }
+
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json?.error || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        if (mounted && Array.isArray(data)) {
+          // Map backend rows to the frontend `NewsItem` shape. The backend may return `lat`/`lon` as
+          // top-level columns rather than a nested `location` object.
+          const mapped: NewsItem[] = data.map((row: any) => {
+            const latRaw = row.lat ?? row.latitude ?? null;
+            const lonRaw = row.lon ?? row.longitude ?? null;
+
+            // Normalize nested Location / location object if provided by backend
+            const rawNested = row.location ?? row.Location ?? null;
+            let location: { lat: number; lon: number } | null = null;
+
+            if (rawNested) {
+              const nestedLat =
+                rawNested.lat ??
+                rawNested.latitude ??
+                rawNested.Lat ??
+                rawNested.Latitude ??
+                null;
+              const nestedLon =
+                rawNested.lon ??
+                rawNested.longitude ??
+                rawNested.Lon ??
+                rawNested.Longitude ??
+                null;
+              if (nestedLat != null || nestedLon != null) {
+                location = { lat: Number(nestedLat), lon: Number(nestedLon) };
+              }
+            } else if (latRaw != null || lonRaw != null) {
+              location = { lat: Number(latRaw), lon: Number(lonRaw) };
+            }
+
+            const categories = Array.isArray(row.category)
+              ? row.category
+              : row.category
+              ? [row.category]
+              : undefined;
+
+            // Normalize severity to lowercase string (e.g. 'critical', 'warning', 'info', 'normal')
+            const rawSeverity =
+              (row.severity as any) ?? (row.status as any) ?? null;
+            const severity = rawSeverity
+              ? String(rawSeverity).toLowerCase()
+              : undefined;
+
+            return {
+              id: String(row.id ?? row._id ?? ""),
+              title: row.title ?? row.name ?? "",
+              description: row.description ?? row.summary ?? undefined,
+              source: row.source ?? row.url ?? undefined,
+              date: row.date ?? row.created_at ?? undefined,
+              severity,
+              category: categories,
+              location,
+              district:
+                row.district ??
+                row.District ??
+                row.location_district ??
+                undefined,
+              location_name: row.location_name ?? row.locationName ?? undefined,
+            } as NewsItem;
+          });
+
+          setNewsItems(mapped);
+
+          // Also set the marker items with the news data
+          const markerItems = mapped.map((item) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            source: item.source,
+            date: item.date,
+            severity:
+              item.severity === "critical" ? "danger" : (item.severity as any),
+            category: item.category,
+            location: item.location,
+            location_name: item.location_name,
+          }));
+          setMarkerItems(markerItems);
+
+          // populate areaInfo from backend district endpoint when available
+          // Use the district extracted from the selected location if available, otherwise use the first district from the mapped data
+          let districtForInfo = "";
+          if (results && selectedIndex !== null) {
+            const displayName = results[selectedIndex]?.display_name;
+            if (displayName) {
+              districtForInfo = extractDistrict(displayName);
+            }
+          }
+          if (!districtForInfo) {
+            districtForInfo = mapped.find((m) => !!m.district)?.district || "";
+          }
+
+          if (districtForInfo) {
+            try {
+              const dRes = await fetch(
+                `/api/districts/${encodeURIComponent(districtForInfo)}`
+              );
+              if (dRes.ok) {
+                const dJson = await dRes.json();
+                // Use raw backend risk_level string as area status and keep it unchanged.
+                const rawStatus =
+                  dJson.risk_level ??
+                  dJson.riskLevel ??
+                  dJson.risk ??
+                  undefined;
+
+                // update area info with district/province/country and raw status from backend
+                setAreaInfo((prev) => ({
+                  ...prev,
+                  status: rawStatus,
+                  district: dJson.district ?? districtForInfo,
+                  province: dJson.province ?? prev.province,
+                  country: dJson.country ?? prev.country,
+                }));
+              } else {
+                setAreaInfo((prev) => ({ ...prev, district: districtForInfo }));
+              }
+            } catch (err) {
+              console.error("Failed to fetch district info:", err);
+              setAreaInfo((prev) => ({ ...prev, district: districtForInfo }));
+            }
+          }
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error("Failed to fetch news:", msg);
+        if (mounted) setError(msg);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchNews();
+    return () => {
+      mounted = false;
+    };
+  }, [results, selectedIndex]);
+
+  // Delete a news item by id (calls backend and updates local state)
+  const handleDelete = async (id: string) => {
+    if (!id) return;
+    const ok = confirm("Delete this news item? This action cannot be undone.");
+    if (!ok) return;
+
+    try {
+      const res = await fetch(`/api/news/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (res.status === 204 || res.ok) {
+        // remove from state
+        setNewsItems((prev) => prev.filter((n) => n.id !== id));
+      } else {
+        const body = await res.json().catch(() => ({}));
+        const msg = body?.error ?? body?.message ?? `HTTP ${res.status}`;
+        alert("Failed to delete news: " + msg);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert("Delete request failed: " + msg);
+    }
   };
+
+  // Handle edit modal open
+  const handleEdit = (item: NewsItem) => {
+    setEditingItem(item);
+    setEditModalOpen(true);
+  };
+
+  // Handle successful edit update
+  const handleEditSuccess = (updatedItem: NewsItem) => {
+    // Update the news item in the list
+    setNewsItems((prev) =>
+      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+    );
+
+    // Also update marker items
+    const markerItems = newsItems.map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      source: item.source,
+      date: item.date,
+      severity:
+        item.severity === "critical" ? "danger" : (item.severity as any),
+      category: item.category,
+      location: item.location,
+      location_name: item.location_name,
+    }));
+    setMarkerItems(markerItems);
+
+    setEditModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const [areaInfo, setAreaInfo] = useState<AreaInfo>({
+    status: "warning",
+    district: undefined,
+    province: undefined,
+    country: undefined,
+    historicalEvents: [],
+  });
+
+  // Update the area status context whenever areaInfo.status changes
+  useEffect(() => {
+    setAreaStatus(areaInfo.status);
+  }, [areaInfo.status, setAreaStatus]);
   // Filter options for the checklist
   const filterOptions = ["Accidents", "Violence", "Caution", "Natural Hazard"];
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -174,7 +328,12 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
     return results;
   }, [newsItems, selectedTags, searchTerm, fromDate, toDate]);
 
-  if (newsItems.length === 0) {
+  // Show loading UI while fetching. Only show empty state when not loading and no items returned.
+  if (loading) {
+    return <EmptyState icon={Newspaper} message="Loading news..." />;
+  }
+
+  if (!loading && newsItems.length === 0) {
     return (
       <EmptyState icon={Newspaper} message="No news updates at the moment" />
     );
@@ -233,7 +392,16 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
           setFromDate(f);
           setToDate(t);
         }}
-        onItemClick={onItemClick}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {/* Edit News Modal */}
+      <EditNewsModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        item={editingItem}
+        onSuccess={handleEditSuccess}
       />
     </div>
   );

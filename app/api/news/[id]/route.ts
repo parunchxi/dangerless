@@ -30,10 +30,12 @@ async function getNewsById(id: string) {
 }
 
 /* ------------ GET /api/news/[id] ------------ */
+/* ------------ GET /api/news/[id] ------------ */
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // ⬇ ต้อง await ก่อน ถึงจะเอา id มาใช้ได้
   const { id } = await params;
 
   if (!id) {
@@ -43,25 +45,47 @@ export async function GET(
     );
   }
 
-  const { data, error } = await getNewsById(id);
+  const { data: news, error } = await supabase
+    .from("news")
+    .select("*")
+    .eq("id", id)
+    .single();
 
   if (error) {
-    console.error("Error fetching news:", error.message);
+    console.error("Error fetching news by id:", error.message);
     return NextResponse.json(
       { error: "Unable to fetch news." },
       { status: 500 }
     );
   }
 
-  if (!data) {
+  if (!news) {
     return NextResponse.json(
       { error: "News not found." },
       { status: 404 }
     );
   }
 
-  // 200 OK – คืน full row ตามที่อยู่ในตาราง news
-  return NextResponse.json(data, { status: 200 });
+  const [{ data: categoryRow }, { data: severityRow }] = await Promise.all([
+    supabase
+      .from("category_score")
+      .select("category")
+      .eq("id", news.category_id)
+      .single(),
+    supabase
+      .from("news_severity")
+      .select("severity")
+      .eq("id", news.severity_id)
+      .single(),
+  ]);
+
+  const result = {
+    ...news,
+    category: categoryRow?.category ?? null,
+    severity: severityRow?.severity ?? null,
+  };
+
+  return NextResponse.json(result, { status: 200 });
 }
 
 /* ------------ PUT /api/news/[id] ------------ */
