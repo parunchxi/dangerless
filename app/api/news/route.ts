@@ -36,13 +36,7 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
-  const addressDistrict = data.location?.address_district;
-  if (!addressDistrict) {
-    return NextResponse.json({ error: "Missing address_district" }, { status: 400 });
-  }
-  
-  const district = (String(addressDistrict).split(",")[0] ?? "").replace(/\s*District$/i, "").trim();
-  
+  // เช็คว่า district มีใน district_zone
   const { data: zone, error: zoneErr } = await supabase
     .from("district_zone")
     .select("district")
