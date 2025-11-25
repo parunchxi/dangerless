@@ -4,7 +4,8 @@ import * as React from "react";
 import { useRef, useState, useLayoutEffect } from "react";
 import { Newspaper } from "lucide-react";
 import { EmptyState } from "@/components/shared";
-import NewsCard, { type NewsItem } from "./NewsCard";
+import { NewsCard } from "./NewsCard";
+import { NewsModal } from "./NewsModal";
 import AreaInfoCard, { type AreaInfo } from "./AreaInfoCard";
 
 interface NewsListProps {
@@ -14,12 +15,32 @@ interface NewsListProps {
   fromDate?: string;
   toDate?: string;
   onDateRangeChange?: (from?: string, to?: string) => void;
+  // Pass preview image as second arg so modal can reuse already loaded image
+  onItemClick?: (item: NewsItem, previewImage?: string) => void;
 }
 
-export function NewsList({ items, area, fromDate, toDate, onDateRangeChange }: NewsListProps) {
+export interface NewsItem {
+  id: string;
+  title: string;
+  description?: string;
+  // `source` is now the canonical URL for the news item (was previously `url`)
+  source?: string;
+  date?: string; // ISO string (was publishedAt)
+  severity?: "critical" | "warning" | "info" | "normal"; // was status
+  category?: string[]; // was tags
+  // optional geo location for the news item — use `lon` not `lng`
+  location?: { lat: number; lon: number } | null;
+  // optional brief human-friendly location name to display under the date (snake_case)
+  location_name?: string | null;
+}
+
+export function NewsList({ items, area, fromDate, toDate, onDateRangeChange, onItemClick }: NewsListProps) {
 
   const areaRef = useRef<HTMLDivElement | null>(null);
   const [areaHeight, setAreaHeight] = useState<number>(0);
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<NewsItem | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     if (!areaRef.current) return;
@@ -68,10 +89,28 @@ export function NewsList({ items, area, fromDate, toDate, onDateRangeChange }: N
           <EmptyState icon={Newspaper} message="No news updates at the moment" />
         ) : (
           items.map((item) => (
-            <NewsCard key={item.id} item={item} />
+            <NewsCard
+              key={item.id}
+              item={item}
+              onClick={(img) => {
+                setSelected(item);
+                setSelectedPreview(img ?? null);
+                setOpen(true);
+              }}
+            />
           ))
         )}
       </div>
+      <NewsModal
+        open={open}
+        item={selected}
+        previewImage={selectedPreview}
+        onClose={() => {
+          setOpen(false);
+          setSelected(null);
+          setSelectedPreview(null);
+        }}
+      />
     </div>
   );
 }
