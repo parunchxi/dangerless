@@ -12,6 +12,19 @@ import { useMapSelection } from "@/lib/hooks";
 import { MAP_MODES } from "@/lib/constants";
 import { LoadingSpinner } from "../search/ui";
 import IconSearch from "@/assets/logo/icon-search.svg";
+import { validateDistrict } from "@/lib/utils/districtValidation";
+
+interface FormFieldProps {
+  id: string;
+  label: string;
+  placeholder: string;
+  type?: "text" | "textarea" | "date" | "location" | "select";
+  options?: { value: string }[];
+  rows?: number;
+  className?: string;
+  required?: boolean;
+  onReset?: boolean; // Signal to reset the field
+}
 
 interface FormFieldProps {
   id: string;
@@ -33,6 +46,7 @@ export function FormField({
   rows = 3,
   className,
   required = false,
+  onReset = false,
 }: FormFieldProps) {
   const baseInputClass =
     "rounded-xl border-border/20 bg-background/50 focus:bg-background/75 transition-colors";
@@ -42,6 +56,22 @@ export function FormField({
   const { selectedLocation, coordinates } = useLocationSelection();
   const { results, selectedIndex } = useMapSelection();
   const isSelectingLocation = mode === MAP_MODES.SELECT_LOCATION;
+
+  // Reset url when onReset prop changes
+  React.useEffect(() => {
+    if (onReset && id === "report-source") {
+      setUrl("");
+    }
+  }, [onReset, id]);
+
+  // Validate district match
+  const isDistrictValid = React.useMemo(() => {
+    if (!selectedLocation || !results || selectedIndex === null) {
+      return null; // No validation needed if data is incomplete
+    }
+    const displayName = results[selectedIndex]?.display_name || "";
+    return validateDistrict(selectedLocation, displayName);
+  }, [selectedLocation, results, selectedIndex]);
 
   const handleLocationSelect = () => {
     closeTray(); // Close any open tray
@@ -104,17 +134,40 @@ export function FormField({
               </>
             )}
           </Button>
+
+          {/* Coordinate & Name Section */}
           {coordinates && (
             <div className="text-xs text-muted-foreground">
               Latitude: {coordinates.lat.toFixed(6)}, Longitude:{" "}
-              {coordinates.lng.toFixed(6)} <br />
+              {coordinates.lng.toFixed(6)}
+              <br />
               Name: {selectedLocation}
-              {results && selectedIndex !== null && (
-                <div className="mt-1 text-xs text-foreground/70 italic text-wrap">
-                  Area:{" "}
-                  {results?.[selectedIndex]?.display_name ?? "Unknown address"}
-                </div>
-              )}
+            </div>
+          )}
+
+          {/* Area Section (Separate) */}
+          {results && selectedIndex !== null && (
+            <div className="mt-1 text-xs text-foreground/70 italic text-wrap">
+              Area:{" "}
+              {results?.[selectedIndex]?.display_name ?? "Unknown address"}
+            </div>
+          )}
+
+          {/* District Validation Message */}
+          {isDistrictValid === false && (
+            <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-xs text-destructive">
+                ⚠️ The selected location and search result don't belong to the
+                same district.
+              </p>
+            </div>
+          )}
+
+          {isDistrictValid === true && (
+            <div className="p-2 rounded-lg bg-green-50 border border-green-200">
+              <p className="text-xs text-green-700">
+                ✓ District match confirmed
+              </p>
             </div>
           )}
         </div>
