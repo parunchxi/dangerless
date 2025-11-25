@@ -5,36 +5,7 @@ import { FormField } from "@/components/shared";
 import { useLocationSelection } from "@/lib/contexts/LocationSelectionContext";
 import { useMapSelection } from "@/lib/hooks";
 import { useAuth } from "@/lib/hooks/useAuth";
-
-/**
- * Extracts district name from an address string
- * Handles Thai format: "Subdistrict, District, City, Postal, Country"
- */
-function extractDistrict(address: string): string {
-  if (!address) return "";
-  // Match pattern like "Thung Khru District" or "Thung Khru"
-  const districtMatch = address.match(/([^\,]+?\s+District|\d{5})/);
-  if (districtMatch?.[1]) {
-    return districtMatch[1].replace(/\s+District$/, "").trim();
-  }
-  // Fallback: split by comma and get the second part
-  const parts = address.split(",").map((p) => p.trim());
-  return parts[1] || "";
-}
-
-/**
- * Validates if both selectedLocation and displayName are in the same district
- */
-function isSameDistrict(
-  selectedLocation: string,
-  displayName: string
-): boolean {
-  const district1 = extractDistrict(selectedLocation);
-  const district2 = extractDistrict(displayName);
-  return (
-    district1.toLowerCase() === district2.toLowerCase() && district1 !== ""
-  );
-}
+import { validateDistrict } from "@/lib/utils/districtValidation";
 
 const REPORT_FIELDS = [
   {
@@ -88,16 +59,17 @@ const REPORT_FIELDS = [
 export function AddNewsMode() {
   const { selectedLocation, coordinates, setSelectedLocation, setCoordinates } =
     useLocationSelection();
-  const { results, selectedIndex, clearSelection } = useMapSelection();
+  const { results, selectedIndex, clearSelection, clearMapMarker } =
+    useMapSelection();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [resetFields, setResetFields] = useState(false);
 
   // Clear state when display_name changes
   useEffect(() => {
     setError(null);
-    setSuccess(false);
     setSelectedLocation("");
     setCoordinates(null);
   }, [selectedIndex, results]);
@@ -116,7 +88,7 @@ export function AddNewsMode() {
       results?.[selectedIndex]?.display_name || "Unknown district";
 
     // Validate that selectedLocation and displayName belong to the same district
-    if (!isSameDistrict(selectedLocation, displayName)) {
+    if (!validateDistrict(selectedLocation, displayName)) {
       setError(
         "The selected location and search result don't belong to the same district. Please select a location within the search result."
       );
@@ -163,7 +135,8 @@ export function AddNewsMode() {
       (e.target as HTMLFormElement).reset();
       setSelectedLocation("");
       setCoordinates(null);
-      clearSelection();
+      clearMapMarker();
+      setResetFields(!resetFields); // Trigger reset signal
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -182,7 +155,7 @@ export function AddNewsMode() {
       }}
     >
       {REPORT_FIELDS.map((field) => (
-        <FormField key={field.id} {...field} />
+        <FormField key={field.id} {...field} onReset={resetFields} />
       ))}
 
       {error && (

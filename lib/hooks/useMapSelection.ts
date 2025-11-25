@@ -6,6 +6,24 @@ import { MAP_MODES, API_CONFIG } from "../constants";
 
 import { useLocationSelection } from "../contexts/LocationSelectionContext";
 
+// Store map instance for global access
+let globalMapInstance: maplibregl.Map | null = null;
+
+const clearLocationMarker = (map: maplibregl.Map | null) => {
+  if (!map) return;
+
+  // Remove existing selection marker if any
+  if (map.getLayer("location-selection-marker-pulse")) {
+    map.removeLayer("location-selection-marker-pulse");
+  }
+  if (map.getLayer("location-selection-marker")) {
+    map.removeLayer("location-selection-marker");
+  }
+  if (map.getSource("location-selection-marker")) {
+    map.removeSource("location-selection-marker");
+  }
+};
+
 export function useMapSelection() {
   const { results, selectedIndex, setSelectedIndex } = useMapData();
   const { focusOnLocation } = useMapView();
@@ -63,16 +81,11 @@ export function useMapSelection() {
 
       const coordinate: MapCoordinate = [lngLat.lng, lngLat.lat];
 
+      // Store map instance globally for later access
+      globalMapInstance = map;
+
       // Remove existing selection marker if any
-      if (map.getLayer("location-selection-marker-pulse")) {
-        map.removeLayer("location-selection-marker-pulse");
-      }
-      if (map.getLayer("location-selection-marker")) {
-        map.removeLayer("location-selection-marker");
-      }
-      if (map.getSource("location-selection-marker")) {
-        map.removeSource("location-selection-marker");
-      }
+      clearLocationMarker(map);
 
       // Size you can change quickly
       const MARKER_RADIUS = 7; // <- change this to resize the marker (px)
@@ -153,9 +166,14 @@ export function useMapSelection() {
     [mode, reverseGeocode]
   );
 
-
   const selectedLocation =
     results && selectedIndex !== null ? results[selectedIndex] : null;
+
+  const clearMapMarker = useCallback(() => {
+    if (globalMapInstance) {
+      clearLocationMarker(globalMapInstance);
+    }
+  }, []);
 
   return {
     results,
@@ -164,6 +182,7 @@ export function useMapSelection() {
     selectLocation,
     clearSelection,
     handleLocationClick,
+    clearMapMarker,
     hasResults: Boolean(results && results.length > 0),
     hasSelection: selectedIndex !== null,
   };
