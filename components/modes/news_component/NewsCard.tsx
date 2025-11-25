@@ -4,7 +4,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import LinkPreview from "@/components/shared/LinkPreview";
-import { ExternalLink, MapPin } from "lucide-react";
+import { ExternalLink, MapPin, Edit, Trash2 } from "lucide-react";
 import { useMapView } from "@/lib/contexts";
 import {
   Card,
@@ -25,6 +25,7 @@ export interface NewsItem {
   date?: string; // ISO string (was publishedAt)
   severity?: "critical" | "warning" | "info" | "normal"; // was status
   category?: string[]; // was tags
+  district?: string;
   // optional geo location for the news item — use `lon` not `lng`
   location?: { lat: number; lon: number } | null;
   // optional brief human-friendly location name to display under the date (snake_case)
@@ -33,10 +34,11 @@ export interface NewsItem {
 
 interface NewsCardProps {
   item: NewsItem;
-  onClick?: (previewImage?: string) => void;
+  onEdit?: (item: NewsItem) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function NewsCard({ item, onClick }: NewsCardProps) {
+export function NewsCard({ item, onEdit, onDelete }: NewsCardProps) {
   // show only the date (no time)
   const dateOnly = item.date ? new Date(item.date).toLocaleDateString() : "";
   const { focusOnLocation } = useMapView();
@@ -49,9 +51,11 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
     let cancelled = false;
     const fetchPreview = async () => {
       if (!item.source) return;
-        setPreviewLoading(true);
+      setPreviewLoading(true);
       try {
-          const res = await fetch(`/api/link-preview?url=${encodeURIComponent(item.source)}`);
+        const res = await fetch(
+          `/api/link-preview?url=${encodeURIComponent(item.source)}`
+        );
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
@@ -69,7 +73,8 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
   }, [item.source]);
 
   const statusVariant = (status?: string) => {
-    switch (status) {
+    const s = status ? String(status).toLowerCase() : "";
+    switch (s) {
       case "critical":
         return "destructive";
       case "warning":
@@ -83,73 +88,53 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
 
   const statusLabel = (status?: string) => {
     if (!status) return "";
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    const s = String(status);
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   };
 
   const [showPopup, setShowPopup] = useState(false);
 
   return (
-    <article
-      className="news-card cursor-pointer"
-      onClick={() => onClick?.(previewImage || undefined)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick?.(previewImage || undefined);
-        }
-      }}
-    >
-      {/* pin button: don't open modal */}
+    <Card className="relative pt-2">
+      {/* Location button (top-right) */}
       {item.location && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();          // <-- important
-            try {
-              const loc = item.location!;
-              // build a minimal Nominatim-like result
-              const result = {
-                display_name: item.title || item.description || "Selected location",
-                lat: String(loc.lat),
-                lon: String((loc as any).lon || ""),
-              } as any;
-              focusOnLocation(result);
-            } catch (e) {
-              // ignore
-            }
-          }}
-          aria-label="Show on map"
-          className="map-pin-btn"
-        >
-          <MapPin className="w-6 h-6" />
-          <span className="sr-only">Show location on map</span>
-        </button>
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            className="p-1 rounded-md hover:bg-muted"
+            title="Show on map"
+            onClick={() => {
+              try {
+                const loc = item.location!;
+                // build a minimal Nominatim-like result
+                const result = {
+                  display_name:
+                    item.title || item.description || "Selected location",
+                  lat: String(loc.lat),
+                  lon: String((loc as any).lon || ""),
+                } as any;
+                focusOnLocation(result);
+              } catch (e) {
+                // ignore
+              }
+            }}
+          >
+            <MapPin className="w-6 h-6" />
+            <span className="sr-only">Show location on map</span>
+          </button>
+        </div>
       )}
-
-      {/* source link: don't open modal */}
-      {item.source && (
-        <a
-          href={item.source}
-          onClick={(e) => {
-            e.stopPropagation();          
-          }}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Source
-        </a>
-      )}
-
-      {/* rest of card content */}
       {/* Status badge inside the card (top-left) */}
       {item.severity && (
         <div className="absolute top-2 left-4 z-10">
-          <Badge variant={statusVariant(item.severity)}>{statusLabel(item.severity)}</Badge>
+          <Badge variant={statusVariant(item.severity)}>
+            {statusLabel(item.severity)}
+          </Badge>
         </div>
       )}
-  <CardHeader className="pl-8 pr-12">
-        <CardTitle className="truncate whitespace-nowrap" title={item.title}>{item.title}</CardTitle>
+      <CardHeader className="pl-8 pr-12">
+        <CardTitle className="truncate whitespace-nowrap" title={item.title}>
+          {item.title}
+        </CardTitle>
         {/* `source` is the article URL now; we don't render it here as a publisher label */}
       </CardHeader>
       {item.description && (
@@ -165,36 +150,59 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
             </div>
           )}
 
-          <p className="text-sm text-foreground/80 line-clamp-3">{item.description}</p>
+          <p className="text-sm text-foreground/80 line-clamp-3">
+            {item.description}
+          </p>
         </CardContent>
       )}
       <CardFooter>
-          <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
+        <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
           <div className="flex flex-col">
             <span className="text-sm text-foreground/80">{dateOnly}</span>
             {item.location_name && (
-              <span className="text-xs text-muted-foreground mt-0.5">{item.location_name}</span>
+              <span className="text-xs text-muted-foreground mt-0.5">
+                {item.location_name}
+              </span>
             )}
           </div>
           {item.source ? (
             <div className="relative">
-              <Link
-                href={item.source}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2"
-                onMouseEnter={() => setShowPopup(true)}
-                onMouseLeave={() => setShowPopup(false)}
-                onFocus={() => setShowPopup(true)}
-                onBlur={() => setShowPopup(false)}
-                onClick={(e) => {
-                  e.stopPropagation();           
-                  setShowPopup((s) => !s);
-                }}
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span className="sr-only">Open source</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={item.source}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2"
+                  onMouseEnter={() => setShowPopup(true)}
+                  onMouseLeave={() => setShowPopup(false)}
+                  onFocus={() => setShowPopup(true)}
+                  onBlur={() => setShowPopup(false)}
+                  onClick={() => setShowPopup((s) => !s)}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span className="sr-only">Open source</span>
+                </Link>
+
+                <button
+                  type="button"
+                  title="Edit news item"
+                  className="ml-1 p-1 rounded-md hover:bg-muted"
+                  onClick={() => onEdit?.(item)}
+                >
+                  <Edit className="w-4 h-4" />
+                  <span className="sr-only">Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  title="Delete news item"
+                  className="p-1 rounded-md hover:bg-muted text-red-600 hover:text-red-700"
+                  onClick={() => onDelete?.(item.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="sr-only">Delete</span>
+                </button>
+              </div>
 
               {/* Hover/focus popup preview */}
               {showPopup && (
@@ -206,7 +214,7 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
           ) : null}
         </div>
       </CardFooter>
-    </article>
+    </Card>
   );
 }
 

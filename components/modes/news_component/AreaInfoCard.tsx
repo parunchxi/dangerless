@@ -2,12 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -20,7 +15,8 @@ export interface HistoricalEvent {
 }
 
 export interface AreaInfo {
-  status: DangerLevel;
+  // `status` now holds the raw backend risk level string (e.g. 'low', 'moderate', 'high', 'critical')
+  status?: string;
   subDistrict?: string;
   district?: string;
   province?: string;
@@ -37,24 +33,36 @@ interface AreaInfoCardProps {
   onToggleCollapsed?: (collapsed: boolean) => void;
 }
 
-export function AreaInfoCard({ area, fromDate, toDate, onDateRangeChange, onToggleCollapsed }: AreaInfoCardProps) {
+export function AreaInfoCard({
+  area,
+  fromDate,
+  toDate,
+  onDateRangeChange,
+  onToggleCollapsed,
+}: AreaInfoCardProps) {
   const [collapsed, setCollapsed] = useState(false);
 
-  const statusVariant = (status: DangerLevel) => {
-    switch (status) {
+  // Determine badge variant from backend risk level string
+  const statusVariant = (status?: string) => {
+    if (!status) return "outline";
+    const s = String(status).toLowerCase().trim();
+    switch (s) {
       case "critical":
         return "destructive";
-      case "warning":
+      case "high":
         return "secondary";
-      case "info":
+      case "moderate":
+      case "medium":
         return "default";
+      case "low":
+        return "outline";
       default:
         return "outline";
     }
   };
 
-  const statusLabel = (status: DangerLevel) =>
-    status.charAt(0).toUpperCase() + status.slice(1);
+  // Display the backend status string as-is (do not remap the value)
+  const statusLabel = (status?: string) => status ?? "";
 
   return (
     <div className="relative">
@@ -63,11 +71,14 @@ export function AreaInfoCard({ area, fromDate, toDate, onDateRangeChange, onTogg
           <div className="flex items-center justify-between gap-2">
             <CardTitle>Selected area</CardTitle>
             <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Risk Level:</span>
               <Badge variant={statusVariant(area.status)}>
                 {statusLabel(area.status)}
               </Badge>
               <button
-                aria-label={collapsed ? "Expand area info" : "Collapse area info"}
+                aria-label={
+                  collapsed ? "Expand area info" : "Collapse area info"
+                }
                 className="text-muted-foreground hover:text-foreground"
                 onClick={() => {
                   // toggle and notify parent so it can re-measure immediately
@@ -82,7 +93,11 @@ export function AreaInfoCard({ area, fromDate, toDate, onDateRangeChange, onTogg
                   });
                 }}
               >
-                {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                {collapsed ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronUp className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
@@ -91,12 +106,7 @@ export function AreaInfoCard({ area, fromDate, toDate, onDateRangeChange, onTogg
         {!collapsed && (
           <CardContent>
             <dl className="flex flex-col gap-2 text-sm text-muted-foreground">
-              {area.subDistrict && (
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="font-medium text-foreground">Sub-district</dt>
-                  <dd className="ml-4 text-right truncate">{area.subDistrict}</dd>
-                </div>
-              )}
+              {/* Sub-district removed from the UI per request */}
               {area.district && (
                 <div className="flex items-center justify-between gap-4">
                   <dt className="font-medium text-foreground">District</dt>
@@ -118,28 +128,39 @@ export function AreaInfoCard({ area, fromDate, toDate, onDateRangeChange, onTogg
 
               {/* Historical Events subsection (inside same card) */}
               <div className="pt-2 border-t border-muted-foreground/10">
-                <h4 className="text-sm font-semibold text-foreground mb-2">Historical Events</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">
+                  Historical Events
+                </h4>
 
                 {/* Duration inputs for filtering events: 'To' moved to its own line to fit */}
                 <div className="flex flex-col gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-muted-foreground">From</label>
-                      <input
-                        type="date"
-                        value={fromDate ?? ""}
-                        onChange={(e) => onDateRangeChange?.(e.target.value || undefined, toDate)}
-                        className="w-40 max-w-full border rounded px-2 py-1 text-sm"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-muted-foreground">To</label>
-                      <input
-                        type="date"
-                        value={toDate ?? ""}
-                        onChange={(e) => onDateRangeChange?.(fromDate, e.target.value || undefined)}
-                        className="w-40 max-w-full border rounded px-2 py-1 text-sm"
-                      />
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      From
+                    </label>
+                    <input
+                      type="date"
+                      value={fromDate ?? ""}
+                      onChange={(e) =>
+                        onDateRangeChange?.(e.target.value || undefined, toDate)
+                      }
+                      className="w-40 max-w-full border rounded px-2 py-1 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-muted-foreground">To</label>
+                    <input
+                      type="date"
+                      value={toDate ?? ""}
+                      onChange={(e) =>
+                        onDateRangeChange?.(
+                          fromDate,
+                          e.target.value || undefined
+                        )
+                      }
+                      className="w-40 max-w-full border rounded px-2 py-1 text-sm"
+                    />
+                  </div>
                 </div>
 
                 {/* Historical events list removed per request. Only date inputs remain. */}
@@ -150,17 +171,12 @@ export function AreaInfoCard({ area, fromDate, toDate, onDateRangeChange, onTogg
       </Card>
 
       {/* visual separator so news items below are clearly separated */}
-            <div className="h-3" aria-hidden />
+      <div className="h-3" aria-hidden />
       <div
         aria-hidden
         className="absolute left-0 right-0 bottom-0 h-12 pointer-events-none z-30 bg-gradient-to-b from-background/100 to-transparent"
       />
-      </div>
-      
-      
-
-      
-
+    </div>
   );
 }
 
