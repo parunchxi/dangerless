@@ -9,6 +9,7 @@ import { Search } from "lucide-react";
 import { useMapSelection } from "@/lib/hooks";
 import { useMarkerNew, useAreaStatus } from "@/lib/contexts";
 import { extractDistrict } from "@/lib/utils/districtValidation";
+import { EditNewsModal } from "./news_component/EditNewsModal";
 
 export function NewsMode() {
   // Get search selection context for district extraction
@@ -20,6 +21,10 @@ export function NewsMode() {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -213,6 +218,38 @@ export function NewsMode() {
     }
   };
 
+  // Handle edit modal open
+  const handleEdit = (item: NewsItem) => {
+    setEditingItem(item);
+    setEditModalOpen(true);
+  };
+
+  // Handle successful edit update
+  const handleEditSuccess = (updatedItem: NewsItem) => {
+    // Update the news item in the list
+    setNewsItems((prev) =>
+      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+    );
+
+    // Also update marker items
+    const markerItems = newsItems.map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      source: item.source,
+      date: item.date,
+      severity:
+        item.severity === "critical" ? "danger" : (item.severity as any),
+      category: item.category,
+      location: item.location,
+      location_name: item.location_name,
+    }));
+    setMarkerItems(markerItems);
+
+    setEditModalOpen(false);
+    setEditingItem(null);
+  };
+
   const [areaInfo, setAreaInfo] = useState<AreaInfo>({
     status: "warning",
     district: undefined,
@@ -355,7 +392,16 @@ export function NewsMode() {
           setFromDate(f);
           setToDate(t);
         }}
+        onEdit={handleEdit}
         onDelete={handleDelete}
+      />
+
+      {/* Edit News Modal */}
+      <EditNewsModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        item={editingItem}
+        onSuccess={handleEditSuccess}
       />
     </div>
   );
