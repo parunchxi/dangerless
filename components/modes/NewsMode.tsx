@@ -7,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useMapSelection } from "@/lib/hooks";
-import { useMarkerNew } from "@/lib/contexts/MarkerNewContext";
+import { useMarkerNew, useAreaStatus } from "@/lib/contexts";
 import { extractDistrict } from "@/lib/utils/districtValidation";
 
 export function NewsMode() {
   // Get search selection context for district extraction
   const { results, selectedIndex } = useMapSelection();
   const { setItems: setMarkerItems } = useMarkerNew();
+  const { setAreaStatus } = useAreaStatus();
 
   // Client-side state for news items comes only from the backend now.
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -219,6 +220,11 @@ export function NewsMode() {
     country: undefined,
     historicalEvents: [],
   });
+
+  // Update the area status context whenever areaInfo.status changes
+  useEffect(() => {
+    setAreaStatus(areaInfo.status);
+  }, [areaInfo.status, setAreaStatus]);
   // Filter options for the checklist
   const filterOptions = ["Accidents", "Violence", "Caution", "Natural Hazard"];
   const [selectedTags, setSelectedTags] = useState<string[]>([]);

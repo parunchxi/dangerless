@@ -82,7 +82,7 @@ export function NewsCard({ item, onEdit, onDelete }: NewsCardProps) {
       case "info":
         return "#06b6d4"; // cyan
       default:
-        return "#6b7280"; // gray
+        return "#06b6d4"; // cyan
     }
   };
 

@@ -62,7 +62,46 @@ export function AreaInfoCard({
   };
 
   // Display the backend status string as-is (do not remap the value)
+  // Low Moderate High Critical
   const statusLabel = (status?: string) => status ?? "";
+
+  // Get color for the Risk Level label based on severity
+  const statusColor = (status?: string) => {
+    if (!status) return "text-muted-foreground";
+    const s = String(status).toLowerCase().trim();
+    switch (s) {
+      case "critical":
+        return "text-red-600 dark:text-red-400";
+      case "high":
+        return "text-orange-600 dark:text-orange-400";
+      case "moderate":
+      case "medium":
+        return "text-yellow-600 dark:text-yellow-400";
+      case "low":
+        return "text-green-600 dark:text-green-400";
+      default:
+        return "text-muted-foreground";
+    }
+  };
+
+  // Get background color for the Badge based on severity
+  const badgeColor = (status?: string) => {
+    if (!status) return {};
+    const s = String(status).toLowerCase().trim();
+    switch (s) {
+      case "critical":
+        return { backgroundColor: "#e11d48", color: "white" };
+      case "high":
+        return { backgroundColor: "#f59e0b", color: "white" };
+      case "moderate":
+      case "medium":
+        return { backgroundColor: "#eab308", color: "black" };
+      case "low":
+        return { backgroundColor: "#22c55e", color: "white" };
+      default:
+        return {};
+    }
+  };
 
   return (
     <div className="relative">
@@ -71,8 +110,12 @@ export function AreaInfoCard({
           <div className="flex items-center justify-between gap-2">
             <CardTitle>Selected area</CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Risk Level:</span>
-              <Badge variant={statusVariant(area.status)}>
+              <span
+                className={`text-sm font-medium}`}
+              >
+                Risk Level:
+              </span>
+              <Badge style={badgeColor(area.status)}>
                 {statusLabel(area.status)}
               </Badge>
               <button
