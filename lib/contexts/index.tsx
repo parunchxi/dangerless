@@ -7,6 +7,7 @@ import { MapViewProvider } from "./MapViewContext";
 import { MapLayerProvider } from "./MapLayerContext";
 import { LocationSelectionProvider } from "./LocationSelectionContext";
 import { MarkerNewProvider } from "./MarkerNewContext";
+import { AreaStatusProvider } from "./AreaStatusContext";
 
 interface MapProviderProps {
   children: React.ReactNode;
@@ -14,17 +15,21 @@ interface MapProviderProps {
 
 export function MapProvider({ children }: MapProviderProps) {
   return (
-    <MapDataProvider>
-      <MapViewProvider>
-        <MapLayerProvider>
-          <MarkerNewProvider>
-            <MapModeProvider>
-              <LocationSelectionProvider>{children}</LocationSelectionProvider>
-            </MapModeProvider>
-          </MarkerNewProvider>
-        </MapLayerProvider>
-      </MapViewProvider>
-    </MapDataProvider>
+    <AreaStatusProvider>
+      <MapDataProvider>
+        <MapViewProvider>
+          <MapLayerProvider>
+            <MarkerNewProvider>
+              <MapModeProvider>
+                <LocationSelectionProvider>
+                  {children}
+                </LocationSelectionProvider>
+              </MapModeProvider>
+            </MarkerNewProvider>
+          </MapLayerProvider>
+        </MapViewProvider>
+      </MapDataProvider>
+    </AreaStatusProvider>
   );
 }
 
@@ -35,3 +40,4 @@ export { useMapView } from "./MapViewContext";
 export { useMapLayer } from "./MapLayerContext";
 export { useLocationSelection } from "./LocationSelectionContext";
 export { useMarkerNew } from "./MarkerNewContext";
+export { useAreaStatus } from "./AreaStatusContext";

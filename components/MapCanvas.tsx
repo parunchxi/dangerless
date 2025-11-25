@@ -12,16 +12,21 @@ import {
   useMapSelection,
 } from "@/lib/hooks";
 import { MapControls, LayerSelector } from "@/components/controls";
-import { useMapView } from "@/lib/contexts";
+import { useMapView, useAreaStatus } from "@/lib/contexts";
 
 interface MapCanvasProps {
   hideMobileControls?: boolean;
+  areaStatus?: string;
 }
 
-export function MapCanvas({ hideMobileControls = false }: MapCanvasProps) {
+export function MapCanvas({
+  hideMobileControls = false,
+  areaStatus,
+}: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { map, isReady } = useMapInstance(containerRef);
   const { selectedLocation, userLocation } = useMapView();
+  const { areaStatus: contextAreaStatus } = useAreaStatus();
   const {
     handleZoomIn,
     handleZoomOut,
@@ -30,8 +35,11 @@ export function MapCanvas({ hideMobileControls = false }: MapCanvasProps) {
     isGeolocating,
   } = useMapControls(map);
 
+  // Use context area status if not provided via props
+  const effectiveAreaStatus = areaStatus || contextAreaStatus;
+
   useMapMarkers(map, selectedLocation || null);
-  useMapHighlights(map, selectedLocation || null);
+  useMapHighlights(map, selectedLocation || null, effectiveAreaStatus);
   useUserLocation(map, userLocation);
 
   const { handleLocationClick } = useMapSelection();

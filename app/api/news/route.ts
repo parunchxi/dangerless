@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
     query = query.eq("status", status);
   }
 
-  const { data, error } = await query;
+  const { data: newsRows, error } = await query;
 
   if (error) {
     console.error("Error fetching news list:", error.message);
@@ -150,6 +150,27 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 200 OK: คืน array ของ news ทั้งหมดตาม filter
-  return NextResponse.json(data, { status: 200 });
+  if (!newsRows || newsRows.length === 0) {
+    return NextResponse.json([], { status: 200 });
+  }
+
+  // Load mapping category / severity
+  const [{ data: categories }, { data: severities }] = await Promise.all([
+    supabase.from("category_score").select("id, category"),
+    supabase.from("news_severity").select("id, severity"),
+  ]);
+
+  const categoryMap = new Map<number, string>();
+  const severityMap = new Map<number, string>();
+
+  categories?.forEach((c) => categoryMap.set(c.id, c.category));
+  severities?.forEach((s) => severityMap.set(s.id, s.severity));
+
+  const transformed = newsRows.map((row) => ({
+    ...row,
+    category: categoryMap.get(row.category_id) ?? null,
+    severity: severityMap.get(row.severity_id) ?? null,
+  }));
+
+  return NextResponse.json(transformed, { status: 200 });
 }

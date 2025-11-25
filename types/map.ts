@@ -15,6 +15,7 @@ export type NominatimResult = {
   address?: {
     [key: string]: string;
   };
+  status?: string; // Risk level from backend: 'critical', 'high', 'moderate', 'low'
 };
 
 export type MapMode = (typeof MAP_MODES)[keyof typeof MAP_MODES];
