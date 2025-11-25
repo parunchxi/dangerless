@@ -65,14 +65,24 @@ export class GeocodingService {
   }
 
   private filterResults(results: NominatimResult[]): NominatimResult[] {
+    console.log(results)
     return results.filter((result) => {
       if (!result.address) return false;
-      
-      // Prefer results with geojson data and without quarter subdivision
-      if (result.geojson && !result.address.quarter) {
+
+        // Prefer results with geojson data and without quarter subdivision
+      if (
+        result.geojson &&
+        result.geojson.coordinates.length == 1 &&
+        !result.address.quarter &&
+        !result.address.neighbourhood &&
+        !result.address.residential &&
+        !result.address.province
+      ) {
+        console.log("result After filter: ", result);
         return true;
       }
-      
+
+
       return false;
     });
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { cn } from "@/lib/utils";
 import {
@@ -9,6 +9,7 @@ import {
   useMapHighlights,
   useMapControls,
   useUserLocation,
+  useMapSelection,
 } from "@/lib/hooks";
 import { MapControls, LayerSelector } from "@/components/controls";
 import { useMapView } from "@/lib/contexts";
@@ -33,6 +34,25 @@ export function MapCanvas({ hideMobileControls = false }: MapCanvasProps) {
   useMapHighlights(map, selectedLocation || null);
   useUserLocation(map, userLocation);
 
+  const { handleLocationClick } = useMapSelection();
+
+  // Handle click events for location selection
+  useEffect(() => {
+    if (!map) return;
+
+    const handleClick = (
+      e: maplibregl.MapMouseEvent & { lngLat: maplibregl.LngLat }
+    ) => {
+      handleLocationClick(map, e.lngLat);
+    };
+
+    map.on("click", handleClick);
+
+    return () => {
+      map.off("click", handleClick);
+    };
+  }, [map, handleLocationClick]);
+
   return (
     <div className="relative w-full h-full">
       <div
@@ -51,6 +71,7 @@ export function MapCanvas({ hideMobileControls = false }: MapCanvasProps) {
         >
           <LayerSelector />
           <MapControls
+            map={map}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
             onResetNorth={handleResetNorth}
