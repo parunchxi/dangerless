@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Newspaper } from "lucide-react";
 import { EmptyState } from "@/components/shared";
 import { NewsList, type NewsItem, type AreaInfo } from "./news_component";
@@ -6,14 +6,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useMarkerNew } from "@/lib/contexts/MarkerNewContext";
 
 export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => void }) {
   // Example placeholder items; replace with real data fetching
+  const { setItems } = useMarkerNew();
   const newsItems: NewsItem[] = [
     {
       id: "1",
       title: "Community safety patrol launched",
-      description: "Local volunteers have started a nightly safety patrol in the downtown area.",
+      description:
+        "Local volunteers have started a nightly safety patrol in the downtown area.",
       // `source` is the article URL now
       source: "https://gametora.com/umamusume/characters/101301-mejiro-mcqueen",
       date: new Date().toISOString(),
@@ -25,7 +28,8 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
     {
       id: "2",
       title: "New street lighting installed",
-      description: "Bright LED streetlights is currently being installed on Elm Street to improve visibility.",
+      description:
+        "Bright LED streetlights is currently being installed on Elm Street to improve visibility.",
       source: "https://youtu.be/J7FqiKJmwEI?si=shc-tBEp4W3l8gZW",
       date: new Date().toISOString(),
       severity: "info",
@@ -36,29 +40,32 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
     {
       id: "3",
       title: "Islamic Center Renovation Completed",
-      description: "Renovation of the Islamic Center has been under construction, will featuring new facilities and improved accessibility. Please be careful to the surrounding area.",
+      description:
+        "Renovation of the Islamic Center has been under construction, will featuring new facilities and improved accessibility. Please be careful to the surrounding area.",
       source: "https://youtu.be/-fMkyL1q0eU?si=vrC-94qcXpol8izR",
       date: new Date().toISOString(),
       severity: "info",
       category: ["Caution"],
-      location: { lat: 13.7399, lon: 100.5250 },
+      location: { lat: 13.7399, lon: 100.525 },
       location_name: "Islamic Center",
     },
     {
       id: "4",
       title: "Tornado Warning Issued",
-      description: "A tornado warning has been issued for the area. Residents are advised to take shelter.",
+      description:
+        "A tornado warning has been issued for the area. Residents are advised to take shelter.",
       source: "https://youtu.be/aacHWoB7cmY?si=j30AnKaC7SNpQkPF",
       date: new Date().toISOString(),
       severity: "warning",
       category: ["Natural Hazard"],
-      location: { lat: 13.8050, lon: 100.5600 },
+      location: { lat: 13.805, lon: 100.56 },
       location_name: "Northern District",
     },
     {
       id: "5",
       title: "Car crash on Highway 50",
-      description: "Caution advised due to a multi-vehicle accident on Highway 50 causing delays.",
+      description:
+        "Caution advised due to a multi-vehicle accident on Highway 50 causing delays.",
       source: "https://youtu.be/pDOkKGbFZSY?si=YQOLb9G6WRYMESs7",
       date: new Date().toISOString(),
       severity: "warning",
@@ -66,8 +73,13 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
       // mock location (Bangkok example)
       location: { lat: 13.736717, lon: 100.523186 },
       location_name: "Highway 50, Exit 7",
-    }
+    },
   ];
+
+  // Set initial items in context
+  useEffect(() => {
+    setItems(newsItems);
+  }, [setItems]); // include newsItems if you want updates
 
   const areaInfo: AreaInfo = {
     status: "warning",
@@ -78,13 +90,21 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
     historicalEvents: [
       {
         title: "Annual Night Market",
-        startDate: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 30).toISOString(),
-        endDate: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 29).toISOString(),
+        startDate: new Date(
+          new Date().getTime() - 1000 * 60 * 60 * 24 * 30
+        ).toISOString(),
+        endDate: new Date(
+          new Date().getTime() - 1000 * 60 * 60 * 24 * 29
+        ).toISOString(),
       },
       {
         title: "Street Festival",
-        startDate: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 10).toISOString(),
-        endDate: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 9).toISOString(),
+        startDate: new Date(
+          new Date().getTime() - 1000 * 60 * 60 * 24 * 10
+        ).toISOString(),
+        endDate: new Date(
+          new Date().getTime() - 1000 * 60 * 60 * 24 * 9
+        ).toISOString(),
       },
     ],
   };
@@ -112,17 +132,25 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
 
     // filter by tags if any selected
     if (selectedTags && selectedTags.length > 0) {
-      results = results.filter((it) => !!it.category && it.category.some((t) => selectedTags.includes(t)));
+      results = results.filter(
+        (it) =>
+          !!it.category && it.category.some((t) => selectedTags.includes(t))
+      );
     }
 
     // filter by search term (title)
     if (searchTerm && searchTerm.trim() !== "") {
       const q = searchTerm.trim().toLowerCase();
-      results = results.filter((it) => (it.title || "").toLowerCase().includes(q));
+      results = results.filter((it) =>
+        (it.title || "").toLowerCase().includes(q)
+      );
     }
 
     // filter by date range if provided
-    if ((fromDate && fromDate.trim() !== "") || (toDate && toDate.trim() !== "")) {
+    if (
+      (fromDate && fromDate.trim() !== "") ||
+      (toDate && toDate.trim() !== "")
+    ) {
       let start: Date | null = null;
       let end: Date | null = null;
       if (fromDate) {
@@ -158,7 +186,10 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
       <div className="flex items-start justify-between flex-wrap">
         <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
           {filterOptions.map((opt) => (
-            <label key={opt} className="inline-flex items-center gap-2 whitespace-normal">
+            <label
+              key={opt}
+              className="inline-flex items-center gap-2 whitespace-normal"
+            >
               <Checkbox
                 checked={selectedTags.includes(opt)}
                 onCheckedChange={(v) => toggleTag(opt, !!v)}
@@ -187,7 +218,9 @@ export function NewsMode({ onItemClick }: { onItemClick?: (item: NewsItem) => vo
           className="flex-1 text-sm border rounded-lg px-2 py-1"
         />
         {searchTerm && (
-          <Button variant="ghost" size="sm" onClick={() => setSearchTerm("")}>Clear</Button>
+          <Button variant="ghost" size="sm" onClick={() => setSearchTerm("")}>
+            Clear
+          </Button>
         )}
       </div>
 

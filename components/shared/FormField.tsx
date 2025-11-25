@@ -1,19 +1,24 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import LinkPreview from "./LinkPreview";
 import { Button } from "../ui/button";
 import { useMapMode } from "@/lib/contexts";
-import { useNavigationState, useMapSelection } from "@/lib/hooks";
+import { useNavigationState } from "@/lib/hooks";
 import { useLocationSelection } from "@/lib/contexts/LocationSelectionContext";
+import { useMapSelection } from "@/lib/hooks";
 import { MAP_MODES } from "@/lib/constants";
+import { LoadingSpinner } from "../search/ui";
+import IconSearch from "@/assets/logo/icon-search.svg";
 
 interface FormFieldProps {
   id: string;
   label: string;
   placeholder: string;
-  type?: "text" | "textarea" | "date" | "location";
+  type?: "text" | "textarea" | "date" | "location" | "select";
+  options?: { value: string }[];
   rows?: number;
   className?: string;
   required?: boolean;
@@ -24,6 +29,7 @@ export function FormField({
   label,
   placeholder,
   type = "text",
+  options,
   rows = 3,
   className,
   required = false,
@@ -34,6 +40,7 @@ export function FormField({
   const { mode, setMode } = useMapMode();
   const { closeTray } = useNavigationState();
   const { selectedLocation, coordinates } = useLocationSelection();
+  const { results, selectedIndex } = useMapSelection();
   const isSelectingLocation = mode === MAP_MODES.SELECT_LOCATION;
 
   const handleLocationSelect = () => {
@@ -46,24 +53,55 @@ export function FormField({
       <Label htmlFor={id} className="text-xs font-medium text-foreground/80">
         {label} {required && <span className="text-red-500">*</span>}
       </Label>
+      {type === "select" && options && (
+        <select
+          id={id}
+          name={id}
+          className={cn(
+            "w-full appearance-none px-3 py-2 focus:border-border/40 focus:outline-none focus:ring-1 focus:ring-ring/20 text-sm ",
+            baseInputClass
+          )}
+          defaultValue=""
+          required={required}
+        >
+          <option disabled value="">
+            {placeholder || "Select an option"}
+          </option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.value}
+            </option>
+          ))}
+        </select>
+      )}
       {type === "location" && (
         <div className="flex flex-col gap-2">
           <Button
             variant="outline"
             type="button"
-            className="w-full"
+            className="w-full py-6 text-wrap"
             onClick={handleLocationSelect}
-            disabled={isSelectingLocation}
+            disabled={isSelectingLocation || !results || selectedIndex === null}
           >
-            {isSelectingLocation
-              ? "Waiting for location selection..."
-              : "Select Location From Map"}
-            {!selectedLocation && !isSelectingLocation && (
-              <img
-                src="/assets/logo/dangerless.svg"
-                alt="Dangerless"
-                className="h-full dark:invert px-2"
-              />
+            {selectedIndex !== null ? (
+              isSelectingLocation ? (
+                <>
+                  <LoadingSpinner className="w-4 h-4 mr-1" />
+                  "Waiting for location selection in map ..."
+                </>
+              ) : (
+                "Select Location From Map"
+              )
+            ) : (
+              <>
+                <Image
+                  src={IconSearch}
+                  alt=""
+                  className="inline-block w-4 h-4 opacity-70"
+                  aria-hidden="true"
+                />
+                Please search and select an area first
+              </>
             )}
           </Button>
           {coordinates && (
@@ -71,6 +109,12 @@ export function FormField({
               Latitude: {coordinates.lat.toFixed(6)}, Longitude:{" "}
               {coordinates.lng.toFixed(6)} <br />
               Name: {selectedLocation}
+              {results && selectedIndex !== null && (
+                <div className="mt-1 text-xs text-foreground/70 italic text-wrap">
+                  Area:{" "}
+                  {results?.[selectedIndex]?.display_name ?? "Unknown address"}
+                </div>
+              )}
             </div>
           )}
         </div>

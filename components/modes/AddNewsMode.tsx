@@ -2,6 +2,8 @@ import React from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared";
+import { useLocationSelection } from "@/lib/contexts/LocationSelectionContext";
+import { useMapSelection } from "@/lib/hooks";
 
 const REPORT_FIELDS = [
   {
@@ -25,6 +27,18 @@ const REPORT_FIELDS = [
     required: true,
   },
   {
+    id: "report-category",
+    label: "Category",
+    placeholder: "-- Select a category --",
+    type: "select" as const,
+    options: [
+      { value: "Violence"},
+      { value: "Climate Hazard"},
+      { value: "Accident"},
+    ] as { value: string }[],
+    required: true,
+  },
+  {
     id: "report-source",
     label: "Source",
     placeholder: "Where did you find this information?",
@@ -40,12 +54,40 @@ const REPORT_FIELDS = [
 ] as const;
 
 export function AddNewsMode() {
+  const { coordinates } = useLocationSelection();
+  const { results, selectedIndex } = useMapSelection();
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (!coordinates || selectedIndex === null) {
+      alert("Please select a valid location for the report.");
+      return;
+    }
     // Form submission implementation pending
     console.log("Form submitted");
     // You can access form data here
     const formData = new FormData(e.currentTarget);
     console.log("Form data:", Object.fromEntries(formData.entries()));
+
+    const formNewsStructure = {
+      title: formData.get("report-title"),
+      location: {
+        name: results?.[selectedIndex]?.display_name || "Unknown location",
+        lat: coordinates.lat,
+        lon: coordinates.lng,
+        address_district: results?.[selectedIndex]?.display_name || "Unknown district",
+      },
+      news_source: formData.get("report-source"),
+      news_date: formData.get("report-date"),
+      category: formData.get("report-category"),
+      description: formData.get("report-description"),
+      recommended_action: "To be determined",
+      status: "Private",
+      owner: "userUID", // replace with actual user UID
+    };
+
+    console.log("Structured report data:", formNewsStructure);
+    // console.log("Coordinates:", coordinates);
+    // console.log("Selected location:", results?.[selectedIndex]);
   };
 
   return (
