@@ -41,7 +41,7 @@ interface NewsCardProps {
 export function NewsCard({ item, onEdit, onDelete }: NewsCardProps) {
   // show only the date (no time)
   const dateOnly = item.date ? new Date(item.date).toLocaleDateString() : "";
-  const { focusOnLocation } = useMapView();
+  const { setCenter, setZoom } = useMapView();
 
   // Fetch link preview image client-side for the news card
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -76,13 +76,13 @@ export function NewsCard({ item, onEdit, onDelete }: NewsCardProps) {
     const s = status ? String(status).toLowerCase() : "";
     switch (s) {
       case "critical":
-        return "destructive";
+        return "#e11d48"; // red
       case "warning":
-        return "secondary";
+        return "#f59e0b"; // amber
       case "info":
-        return "default";
+        return "#06b6d4"; // cyan
       default:
-        return "outline";
+        return "#6b7280"; // gray
     }
   };
 
@@ -104,15 +104,12 @@ export function NewsCard({ item, onEdit, onDelete }: NewsCardProps) {
             title="Show on map"
             onClick={() => {
               try {
-                const loc = item.location!;
-                // build a minimal Nominatim-like result
-                const result = {
-                  display_name:
-                    item.title || item.description || "Selected location",
-                  lat: String(loc.lat),
-                  lon: String((loc as any).lon || ""),
-                } as any;
-                focusOnLocation(result);
+                if (!item.location) return;
+                const loc = item.location;
+                // Just navigate to the location without calling focusOnLocation
+                // This prevents the selection highlight from being cleared
+                setCenter([loc.lon, loc.lat]);
+                setZoom(15); // Set appropriate zoom level
               } catch (e) {
                 // ignore
               }
@@ -123,16 +120,23 @@ export function NewsCard({ item, onEdit, onDelete }: NewsCardProps) {
           </button>
         </div>
       )}
-      {/* Status badge inside the card (top-left) */}
+      {/* Status badge inside the card (bottom-left with corner at top) */}
       {item.severity && (
-        <div className="absolute top-2 left-4 z-10">
-          <Badge variant={statusVariant(item.severity)}>
+        <div className="absolute top-0 left-0 z-10">
+          <Badge
+            style={{
+              backgroundColor: statusVariant(item.severity),
+              color: "white",
+              borderRadius: "0 20px 20px 0",
+            }}
+            className="text-xs font-semibold shadow-md px-3 py-1"
+          >
             {statusLabel(item.severity)}
           </Badge>
         </div>
       )}
-      <CardHeader className="pl-8 pr-12">
-        <CardTitle className="truncate whitespace-nowrap" title={item.title}>
+      <CardHeader className=" ">
+        <CardTitle className="truncate whitespace-nowrap " title={item.title}>
           {item.title}
         </CardTitle>
         {/* `source` is the article URL now; we don't render it here as a publisher label */}

@@ -6,68 +6,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useMapSelection } from "@/lib/hooks";
+import { useMarkerNew } from "@/lib/contexts/MarkerNewContext";
+import { extractDistrict } from "@/lib/utils/districtValidation";
 
 export function NewsMode() {
-  // NOTE: The old mock news items are commented out so the UI uses backend data as the source of truth.
-  /*
-  const mockNews: NewsItem[] = [
-    {
-      id: "1",
-      title: "Community safety patrol launched",
-      description: "Local volunteers have started a nightly safety patrol in the downtown area.",
-      source: "https://gametora.com/umamusume/characters/101301-mejiro-mcqueen",
-      date: new Date().toISOString(),
-      severity: "critical",
-      category: ["Caution"],
-      location: { lat: 13.7437, lon: 100.5321 },
-      location_name: "Downtown Patrol HQ",
-    },
-    {
-      id: "2",
-      title: "New street lighting installed",
-      description: "Bright LED streetlights is currently being installed on Elm Street to improve visibility.",
-      source: "https://youtu.be/J7FqiKJmwEI?si=shc-tBEp4W3l8gZW",
-      date: new Date().toISOString(),
-      severity: "info",
-      category: ["Caution"],
-      location: { lat: 13.7304, lon: 100.5206 },
-      location_name: "Elm Street",
-    },
-    {
-      id: "3",
-      title: "Islamic Center Renovation Completed",
-      description: "Renovation of the Islamic Center has been under construction, will featuring new facilities and improved accessibility. Please be careful to the surrounding area.",
-      source: "https://youtu.be/-fMkyL1q0eU?si=vrC-94qcXpol8izR",
-      date: new Date().toISOString(),
-      severity: "info",
-      category: ["Caution"],
-      location: { lat: 13.7399, lon: 100.5250 },
-      location_name: "Islamic Center",
-    },
-    {
-      id: "4",
-      title: "Tornado Warning Issued",
-      description: "A tornado warning has been issued for the area. Residents are advised to take shelter.",
-      source: "https://youtu.be/aacHWoB7cmY?si=j30AnKaC7SNpQkPF",
-      date: new Date().toISOString(),
-      severity: "warning",
-      category: ["Natural Hazard"],
-      location: { lat: 13.8050, lon: 100.5600 },
-      location_name: "Northern District",
-    },
-    {
-      id: "5",
-      title: "Car crash on Highway 50",
-      description: "Caution advised due to a multi-vehicle accident on Highway 50 causing delays.",
-      source: "https://youtu.be/pDOkKGbFZSY?si=YQOLb9G6WRYMESs7",
-      date: new Date().toISOString(),
-      severity: "warning",
-      category: ["Accidents"],
-      location: { lat: 13.736717, lon: 100.523186 },
-      location_name: "Highway 50, Exit 7",
-    }
-  ];
-  */
+  // Get search selection context for district extraction
+  const { results, selectedIndex } = useMapSelection();
+  const { setItems: setMarkerItems } = useMarkerNew();
 
   // Client-side state for news items comes only from the backend now.
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -80,7 +26,25 @@ export function NewsMode() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/news");
+        // Extract district from the selected location
+        if (!results || selectedIndex === null) {
+          return;
+        }
+        let districtParam = "";
+        if (results && selectedIndex !== null) {
+          const displayName = results[selectedIndex]?.display_name;
+          if (displayName) {
+            districtParam = extractDistrict(displayName);
+          }
+        }
+
+        // Build the API URL with district parameter if available
+        let apiUrl = "/api/news";
+        if (districtParam) {
+          apiUrl += `?district=${encodeURIComponent(districtParam)}`;
+        }
+
+        const res = await fetch(apiUrl);
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
           throw new Error(json?.error || `HTTP ${res.status}`);
@@ -150,12 +114,38 @@ export function NewsMode() {
 
           setNewsItems(mapped);
 
+          // Also set the marker items with the news data
+          const markerItems = mapped.map((item) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            source: item.source,
+            date: item.date,
+            severity:
+              item.severity === "critical" ? "danger" : (item.severity as any),
+            category: item.category,
+            location: item.location,
+            location_name: item.location_name,
+          }));
+          setMarkerItems(markerItems);
+
           // populate areaInfo from backend district endpoint when available
-          const firstDistrict = mapped.find((m) => !!m.district)?.district;
-          if (firstDistrict) {
+          // Use the district extracted from the selected location if available, otherwise use the first district from the mapped data
+          let districtForInfo = "";
+          if (results && selectedIndex !== null) {
+            const displayName = results[selectedIndex]?.display_name;
+            if (displayName) {
+              districtForInfo = extractDistrict(displayName);
+            }
+          }
+          if (!districtForInfo) {
+            districtForInfo = mapped.find((m) => !!m.district)?.district || "";
+          }
+
+          if (districtForInfo) {
             try {
               const dRes = await fetch(
-                `/api/districts/${encodeURIComponent(firstDistrict)}`
+                `/api/districts/${encodeURIComponent(districtForInfo)}`
               );
               if (dRes.ok) {
                 const dJson = await dRes.json();
@@ -170,16 +160,16 @@ export function NewsMode() {
                 setAreaInfo((prev) => ({
                   ...prev,
                   status: rawStatus,
-                  district: dJson.district ?? firstDistrict,
+                  district: dJson.district ?? districtForInfo,
                   province: dJson.province ?? prev.province,
                   country: dJson.country ?? prev.country,
                 }));
               } else {
-                setAreaInfo((prev) => ({ ...prev, district: firstDistrict }));
+                setAreaInfo((prev) => ({ ...prev, district: districtForInfo }));
               }
             } catch (err) {
               console.error("Failed to fetch district info:", err);
-              setAreaInfo((prev) => ({ ...prev, district: firstDistrict }));
+              setAreaInfo((prev) => ({ ...prev, district: districtForInfo }));
             }
           }
         }
@@ -196,7 +186,7 @@ export function NewsMode() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [results, selectedIndex]);
 
   // Delete a news item by id (calls backend and updates local state)
   const handleDelete = async (id: string) => {
