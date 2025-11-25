@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/shared";
 import { NewsCard } from "./NewsCard";
 import { NewsModal } from "./NewsModal";
 import AreaInfoCard, { type AreaInfo } from "./AreaInfoCard";
-import type { NewsItem } from "./NewsCard";
+import type  NewsItem  from "./NewsCard";
 
 interface NewsListProps {
   items: NewsItem[];
