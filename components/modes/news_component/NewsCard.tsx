@@ -33,9 +33,10 @@ export interface NewsItem {
 
 interface NewsCardProps {
   item: NewsItem;
+  onClick?: (previewImage?: string) => void;
 }
 
-export function NewsCard({ item }: NewsCardProps) {
+export function NewsCard({ item, onClick }: NewsCardProps) {
   // show only the date (no time)
   const dateOnly = item.date ? new Date(item.date).toLocaleDateString() : "";
   const { focusOnLocation } = useMapView();
@@ -88,33 +89,59 @@ export function NewsCard({ item }: NewsCardProps) {
   const [showPopup, setShowPopup] = useState(false);
 
   return (
-    <Card className="relative pt-2">
-      {/* Location button (top-right) */}
+    <article
+      className="news-card cursor-pointer"
+      onClick={() => onClick?.(previewImage || undefined)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.(previewImage || undefined);
+        }
+      }}
+    >
+      {/* pin button: don't open modal */}
       {item.location && (
-        <div className="absolute top-4 right-4 z-10">
-          <button
-            className="p-1 rounded-md hover:bg-muted"
-            title="Show on map"
-            onClick={() => {
-              try {
-                const loc = item.location!;
-                // build a minimal Nominatim-like result
-                const result = {
-                  display_name: item.title || item.description || "Selected location",
-                  lat: String(loc.lat),
-                  lon: String((loc as any).lon || ""),
-                } as any;
-                focusOnLocation(result);
-              } catch (e) {
-                // ignore
-              }
-            }}
-          >
-            <MapPin className="w-6 h-6" />
-            <span className="sr-only">Show location on map</span>
-          </button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();          // <-- important
+            try {
+              const loc = item.location!;
+              // build a minimal Nominatim-like result
+              const result = {
+                display_name: item.title || item.description || "Selected location",
+                lat: String(loc.lat),
+                lon: String((loc as any).lon || ""),
+              } as any;
+              focusOnLocation(result);
+            } catch (e) {
+              // ignore
+            }
+          }}
+          aria-label="Show on map"
+          className="map-pin-btn"
+        >
+          <MapPin className="w-6 h-6" />
+          <span className="sr-only">Show location on map</span>
+        </button>
       )}
+
+      {/* source link: don't open modal */}
+      {item.source && (
+        <a
+          href={item.source}
+          onClick={(e) => {
+            e.stopPropagation();          
+          }}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Source
+        </a>
+      )}
+
+      {/* rest of card content */}
       {/* Status badge inside the card (top-left) */}
       {item.severity && (
         <div className="absolute top-2 left-4 z-10">
@@ -160,7 +187,10 @@ export function NewsCard({ item }: NewsCardProps) {
                 onMouseLeave={() => setShowPopup(false)}
                 onFocus={() => setShowPopup(true)}
                 onBlur={() => setShowPopup(false)}
-                onClick={() => setShowPopup((s) => !s)}
+                onClick={(e) => {
+                  e.stopPropagation();           
+                  setShowPopup((s) => !s);
+                }}
               >
                 <ExternalLink className="w-4 h-4" />
                 <span className="sr-only">Open source</span>
@@ -176,7 +206,7 @@ export function NewsCard({ item }: NewsCardProps) {
           ) : null}
         </div>
       </CardFooter>
-    </Card>
+    </article>
   );
 }
 
