@@ -23,7 +23,7 @@ test("Google Sign-In persistent login", async () => {
   // Launch persistent browser context
   console.log("Step 3: Launching persistent browser context");
   const browser = await chromium.launchPersistentContext(cookiePath, {
-    headless: false,
+    headless: true,
     args: [
       `--disable-blink-features=AutomationControlled`,
       "--no-sandbox",
@@ -42,7 +42,7 @@ test("Google Sign-In persistent login", async () => {
 
   // Click Google Sign-In button
   console.log('Step 6: Clicking "Sign In with Google" button');
-  await page.getByRole("button", { name: "Sign In with Google" }).click();
+   await page.getByRole("button", { name: "Sign in to your account" }).click();
 
   // Perform Google login
   console.log("Step 7: Filling email");
@@ -61,7 +61,7 @@ test("Google Sign-In persistent login", async () => {
   // Wait for redirect to your app after login
   console.log("Step 10: Waiting for redirect to app");
   await page.waitForURL("http://localhost:3000/**");
-  
+
   const screenshotPath = "/tmp/after-login.png";
   await page.screenshot({ path: screenshotPath, fullPage: true });
   console.log("✅ Step 10.1: Screenshot saved after redirect:", screenshotPath);
