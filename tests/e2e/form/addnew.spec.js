@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.use({
-  headless: false,
+  headless: true,
 });
 
 /* --------------------------------------------------

@@ -44,7 +44,7 @@ jobs:
           npx wait-on http://localhost:3000
 
       - name: Run Playwright tests in headed mode
-        run: xvfb-run -a npx playwright test tests/e2e/ --headed --workers=1
+        run: npx playwright test tests/e2e/ --workers=1
       
       - name: Upload screenshots
         if: always()

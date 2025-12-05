@@ -27,7 +27,7 @@ test("Google Sign-In persistent login", async () => {
   // Launch persistent browser context
   console.log("Step 3: Launching persistent browser context");
   const browser = await chromium.launchPersistentContext(cookiePath, {
-    headless: false,
+    headless: true,
     args: [
       `--disable-blink-features=AutomationControlled`,
       "--no-sandbox",
