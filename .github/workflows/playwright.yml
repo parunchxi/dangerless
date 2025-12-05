@@ -3,7 +3,8 @@ name: Playwright Google Sign-In Test
 on:
   push:
     branches:
-      - feat/testing
+      - dev
+      - feat/map_dev
   pull_request:
     branches:
       - main
