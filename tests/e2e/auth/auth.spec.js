@@ -9,6 +9,10 @@ if (!process.env.GITHUB_ACTIONS) {
 }
 
 test("Google Sign-In persistent login", async () => {
+  console.log("\n========================================");
+  console.log("  TEST: Google Sign-In persistent login");
+  console.log("========================================\n");
+
   const cookiePath = "/tmp/chromium-session"; // use /tmp for GitHub Actions
   console.log("Step 1: Set cookie path:", cookiePath);
 
@@ -23,7 +27,7 @@ test("Google Sign-In persistent login", async () => {
   // Launch persistent browser context
   console.log("Step 3: Launching persistent browser context");
   const browser = await chromium.launchPersistentContext(cookiePath, {
-    headless: true,
+    headless: false,
     args: [
       `--disable-blink-features=AutomationControlled`,
       "--no-sandbox",
@@ -42,7 +46,7 @@ test("Google Sign-In persistent login", async () => {
 
   // Click Google Sign-In button
   console.log('Step 6: Clicking "Sign In with Google" button');
-   await page.getByRole("button", { name: "Sign in to your account" }).click();
+  await page.getByRole("button", { name: "Sign in to your account" }).click();
 
   // Perform Google login
   console.log("Step 7: Filling email");
