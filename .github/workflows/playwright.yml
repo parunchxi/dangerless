@@ -11,7 +11,7 @@ on:
 
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     env:
       # Secrets injected as environment variables
@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
       - name: Install Playwright browsers
         run: npx playwright install
       
@@ -42,13 +45,13 @@ jobs:
 
       - name: Run Auth Test Headless
         run: |
-          npx playwright test tests/e2e/auth/auth.spec.js --workers=1
+         npx playwright test tests/e2e/auth/auth.spec.js --workers=1
       - name: Run Add New Form Test Headless
         run: |
-          npx playwright test tests/e2e/form/addnew.spec.js --workers=1
+         xvfb-run -a npx playwright test tests/e2e/form/addnew.spec.js --workers=1
       - name: Run Search Test Headless
         run: |
-          npx playwright test tests/e2e/search/search.spec.js --workers=1
+         xvfb-run -a npx playwright test tests/e2e/search/search.spec.js --workers=1
       
       - name: Upload screenshots
         if: always()
