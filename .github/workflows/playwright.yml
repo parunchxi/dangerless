@@ -43,6 +43,9 @@ jobs:
           npm run dev &
           npx wait-on http://localhost:3000
 
+      - name: Run Auth Test Headless
+        run: |
+         xvfb-run -a npx playwright test tests/e2e/auth/auth.spec.js --workers=1
       - name: Run Add New Form Test Headless
         run: |
          xvfb-run -a npx playwright test tests/e2e/form/addnew.spec.js --workers=1
