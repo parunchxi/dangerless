@@ -8,6 +8,10 @@ test.use({
    TEST 1 — ADD NEW REPORT
 -------------------------------------------------- */
 test("Add new report (TestForm)", async ({ page }) => {
+  console.log("\n========================================");
+  console.log("  TEST: Add new report (TestForm)");
+  console.log("========================================\n");
+
   await page.goto("http://localhost:3000/");
   await page.getByRole("textbox", { name: "Search place" }).fill("ทุ่งครุ");
   await page.getByRole("button", { name: "Search" }).click();
