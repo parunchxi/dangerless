@@ -49,6 +49,9 @@ jobs:
       - name: Run Add New Form Test Headless
         run: |
          xvfb-run -a npx playwright test tests/e2e/form/addnew.spec.js --workers=1
+      - name: Run Edit Form Test Headless
+        run: |
+         xvfb-run -a npx playwright test tests/e2e/form/editform.spec.js --workers=1
       - name: Run Search Test Headless
         run: |
          xvfb-run -a npx playwright test tests/e2e/search/search.spec.js --workers=1

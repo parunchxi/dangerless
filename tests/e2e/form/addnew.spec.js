@@ -4,12 +4,9 @@ test.use({
   headless: true,
 });
 
-/* --------------------------------------------------
-   TEST 1 — ADD NEW REPORT
--------------------------------------------------- */
-test("Add new report (TestForm)", async ({ page }) => {
+test("Add new report (TestAddForm)", async ({ page }) => {
   console.log("\n========================================");
-  console.log("  TEST: Add new report (TestForm)");
+  console.log("  TEST: Add new report (TestAddForm)");
   console.log("========================================\n");
 
   await page.goto("http://localhost:3000/");
@@ -23,7 +20,7 @@ test("Add new report (TestForm)", async ({ page }) => {
   await page.waitForTimeout(6000);
 
   await page.getByRole("button", { name: "Report" }).click();
-  await page.getByRole("textbox", { name: "Title *" }).fill("TestForm");
+  await page.getByRole("textbox", { name: "Title *" }).fill("TestAddForm");
 
   await page.getByRole("button", { name: "Select Location From Map" }).click();
   await page.getByRole("region", { name: "Map" }).click({
@@ -55,7 +52,7 @@ test("Add new report (TestForm)", async ({ page }) => {
     await page.waitForTimeout(6000);
     await page.getByRole("button", { name: "News" }).click();
 
-    await page.getByText("TestForm").waitFor();
+    await page.getByText("TestAddForm").waitFor();
 
     // Dialog listener BEFORE clicking delete
     page.once("dialog", async (dialog) => {
