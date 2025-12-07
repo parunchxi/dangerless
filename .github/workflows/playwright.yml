@@ -1,0 +1,64 @@
+name: Playwright Google Sign-In Test
+
+on:
+  push:
+    branches:
+      - dev
+      - feat/map_dev
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      # Secrets injected as environment variables
+      GOOGLE_SIGNIN_EMAIL: ${{ secrets.GOOGLE_SIGNIN_EMAIL }}
+      GOOGLE_SIGNIN_PASSWORD: ${{ secrets.GOOGLE_SIGNIN_PASSWORD }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Install Playwright browsers
+        run: npx playwright install
+      
+      - name: Start local server
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000
+
+      - name: Run Auth Test Headless
+        run: |
+         xvfb-run -a npx playwright test tests/e2e/auth/auth.spec.js --browser=chromium --workers=1
+      - name: Run Add New Form Test Headless
+        run: |
+         xvfb-run -a npx playwright test tests/e2e/form/addnew.spec.js --workers=1
+      - name: Run Edit Form Test Headless
+        run: |
+         xvfb-run -a npx playwright test tests/e2e/form/editform.spec.js --workers=1
+      - name: Run Search Test Headless
+        run: |
+         xvfb-run -a npx playwright test tests/e2e/search/search.spec.js --workers=1
+      
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: /tmp/*.png
