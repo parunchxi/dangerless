@@ -23,8 +23,8 @@ npm --version
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/parunchxi/dangerless.git
-   cd dangerless
+   git clone https://github.com/parunchxi/Dangerless.git
+   cd Dangerless
    ```
 
 2. **Install dependencies**
