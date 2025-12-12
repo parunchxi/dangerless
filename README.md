@@ -2,139 +2,125 @@
 
 An application for providing travelers with real-time neighborhood safety ratings and local safety news alerts.
 
-## Quick Start
+## Prerequisites
 
-1. **Clone and install**
+Make sure you have these installed:
+
+- **Node.js** v20 or higher
+- **npm** v10 or higher (comes with Node.js)
+- **Supabase Account** (free account at [supabase.com](https://supabase.com/))
+- **Git**
+
+Verify installation:
+
+```bash
+node --version
+npm --version
+```
+
+## Installation
+
+1. **Clone the repository**
 
    ```bash
    git clone https://github.com/parunchxi/dangerless.git
    cd dangerless
+   ```
+
+2. **Install dependencies**
+   ```bash
    npm install
    ```
 
-2. **Set up environment**
+## Configuration
+
+### Environment Variables
+
+1. **Rename `.env.example` to `.env.local`**
 
    ```bash
    cp .env.example .env.local
    ```
 
-   Add your Supabase credentials to `.env.local`:
+2. **Add your Supabase credentials in `.env.local`:**
 
    ```bash
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=your_supabase_anon_key
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your-project-url
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=your-anon-key
+
+   # For Google Sign-In Test Account (Optional)
+   GOOGLE_SIGNIN_EMAIL=your-email
+   GOOGLE_SIGNIN_PASSWORD=your-password
    ```
 
-3. **Start development**
-   ```bash
-   npm run dev
+   Get Supabase credentials from: Supabase Dashboard → Your Project → Settings → API
+
+### Database Setup
+
+**Important:** Import database files BEFORE running the app.
+
+1. Open **Supabase Dashboard** → Go to **SQL Editor**
+
+2. Copy and run these SQL files **in order**:
+
+   - `database/enum.sql` (creates enums)
+   - `database/schema.sql` (creates tables)
+   - `database/functions.sql` (creates functions)
+   - `database/triggers.sql` (creates triggers)
+   - `database/appSetting.sql` (adds initial data)
+
+3. Enable required extensions:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS postgis;
+   CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
    ```
 
-## Features (Planned)
+## How to Run
 
-- 🗺️ **Real-time Safety Map** - Interactive map with red zone overlays
-- 🔐 **Google OAuth Authentication** - Secure user authentication
-- 📢 **Community Alerts** - Local safety news and reports
-- 📊 **Historical Analysis** - Safety trend analysis over time
-- 🏠 **Neighborhood Monitoring** - Area-specific safety ratings
-
-## Tech Stack
-
-- **Frontend:** Next.js 14, TypeScript, Tailwind CSS
-- **Backend:** Supabase (PostgreSQL + PostGIS)
-- **Authentication:** Supabase Auth with Google OAuth
-- **UI Components:** shadcn/ui
-- **Deployment:** Vercel
-
-## Development
+**Start the development server:**
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run lint         # Run ESLint
-npm run type-check   # TypeScript type checking
+npm run dev
 ```
 
-## Project Structure
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-```
-app/
-├── page.tsx              # Main map application
-├── layout.tsx            # Root layout with theme provider
-├── globals.css           # Global styles
-├── auth/                 # Authentication routes
-│   ├── confirm/          # Email confirmation
-│   └── error/            # Auth error handling
-└── api/
-    └── map/              # Map API routes
+## Test Credentials
 
-components/
-├── navigation/           # Navigation bar components
-│   ├── NavigationBar.tsx
-│   ├── NavItem.tsx
-│   ├── NavLogo.tsx
-│   ├── NavThemeSwitcher.tsx
-│   └── NavUserSection.tsx
-├── modes/                # Map mode components
-│   ├── NewsMode.tsx
-│   └── AddNewsMode.tsx
-├── trays/                # Sidebar tray components
-│   ├── NewsTray.tsx
-│   └── ReportTray.tsx
-├── controls/             # Map controls
-│   ├── MapControls.tsx
-│   └── LayerSelector.tsx
-├── search/               # Search functionality
-│   ├── MapSearchBar.tsx
-│   └── ui/               # Search UI components
-├── mobile/               # Mobile-specific components
-│   ├── CollapsibleSection.tsx
-│   ├── DragHandle.tsx
-│   ├── ThemeSwitcher.tsx
-│   └── UserSection.tsx
-├── shared/               # Shared UI components
-│   ├── EmptyState.tsx
-│   ├── FormField.tsx
-│   └── TrayComponents.tsx
-├── ui/                   # shadcn/ui components
-├── MapCanvas.tsx         # Main map component
-├── MobileBottomSheet.tsx # Mobile UI container
-└── SidebarTray.tsx       # Desktop sidebar container
+**Sign in with your Google account:**
 
-lib/
-├── contexts/             # React contexts
-│   ├── MapDataContext.tsx
-│   ├── MapLayerContext.tsx
-│   ├── MapModeContext.tsx
-│   └── MapViewContext.tsx
-├── hooks/                # Custom React hooks
-│   ├── useAuth.ts
-│   ├── useMapControls.ts
-│   ├── useMapInstance.ts
-│   ├── useMapMarkers.ts
-│   ├── useMapSearch.ts
-│   ├── useMapSelection.ts
-│   ├── useNavigationState.ts
-│   └── useUserLocation.ts
-├── services/             # External services
-│   └── geocoding.ts
-├── supabase/             # Supabase client
-│   ├── client.ts
-│   ├── server.ts
-│   └── middleware.ts
-├── constants/            # App constants
-│   └── navigation.ts
-└── utils.ts              # Utility functions
+1. Click "Sign in" on the login page
+2. Use your own Google account credentials
+3. Grant necessary permissions when prompted
 
-types/
-├── map.ts                # Map-related types
-└── navigation.ts         # Navigation types
-```
+All users start as **Standard Users** with these permissions:
 
-## Contributing
+- View safety map and news
+- Submit safety reports
+- View own submissions
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run `npm run lint` and `npm run type-check`
-5. Submit a pull request
+## Project Status & Known Issues
+
+### ✅ Working Features
+
+- Interactive safety map with color-coded danger zones
+- Google OAuth authentication
+- User can submit safety reports (location, severity, category)
+- Search for locations and view safety info
+- Responsive design (desktop and mobile)
+- Light/dark theme switching
+- Map controls (layers, zoom, user location)
+
+### ⚠️ Known Issues
+
+1. **History Feature - Not fully implemented**
+
+   - Original plan included advanced time filters (1M, 6M, 1Y, 5Y)
+   - Could not be completed within sprint timeline due to complexity
+   - **Solution:** Reduced to MVP version, shows recent news only
+
+2. **Data Consistency - Fixed**
+   - Frontend and backend used different field names early in development
+   - Caused mismatched data and rendering errors
+   - **Solution:** Standardized data structure and API response format across both ends
